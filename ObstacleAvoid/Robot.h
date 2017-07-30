@@ -4,8 +4,8 @@
 #include <HamsterAPIClientCPP/Hamster.h>
 #include <set>
 #include <math.h>
-#include "Node.h"
-#include "NodeMap.h"
+#include "MapCell.h"
+#include "MapMatrix.h"
 #include "Structs.h"
 #include "MapDrawer.h"
 #include "Constants.h"

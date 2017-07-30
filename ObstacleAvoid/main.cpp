@@ -1,6 +1,6 @@
 #include <HamsterAPIClientCPP/Hamster.h>
 #include <iostream>
-#include "NodeMap.h"
+#include "MapMatrix.h"
 #include "PathPlanner.h"
 #include <stdlib.h>
 #include "MapDrawer.h"
@@ -27,7 +27,7 @@ int main() {
 }
 
 bool isWaypointReached(const positionState& currLocation,
-		const Node& hamsterWaypoint) {
+		const MapCell& hamsterWaypoint) {
 	double distanceFromWaypoint = sqrt(
 			pow(currLocation.pos.x - hamsterWaypoint.getX(), 2)
 					+ pow(currLocation.pos.y - hamsterWaypoint.getY(), 2));
@@ -35,15 +35,15 @@ bool isWaypointReached(const positionState& currLocation,
 	return distanceFromWaypoint <= DISTANCE_FROM_WAYPOINT_TOLERANCE;
 }
 
-void initializeParticalesOnRobot(OccupancyGrid roomRealMapFromMemory,
-		NodeMap roomBlownMap, LocalizationManager* localizationManager,
-		MapDrawer* mapDrawer, Node* goalPos) {
+void initializeParticalesOnRobot(OccupancyGrid ogrid,
+		MapMatrix roomBlownMap, LocalizationManager* localizationManager,
+		MapDrawer* mapDrawer, MapCell* goalPos) {
 	cout << "Initialize particales on robot" << endl;
 	double bestParticalesAvrageBelief = 0;
 	while (bestParticalesAvrageBelief < TARGET_START_BELIEF) {
 		localizationManager->moveParticales(0, 0, 0);
-		mapDrawer->DrawMap(&roomRealMapFromMemory, MAP_ROTATION);
-		mapDrawer->DrawNodeMap(&roomBlownMap);
+		mapDrawer->DrawMap(&ogrid, MAP_ROTATION);
+		mapDrawer->DrawMapMatrix(&roomBlownMap);
 		mapDrawer->DrawPath(goalPos);
 		bestParticalesAvrageBelief = mapDrawer->DrawPatricles(
 				localizationManager->getParticles());
@@ -61,36 +61,36 @@ void startRobotAction() {
  hamster = new HamsterAPI::Hamster(1);
  sleep(3);
 
- NodeMap roomRealMap;
- NodeMap roomBlownMap;
+ MapMatrix roomRealMap;
+ MapMatrix roomBlownMap;
  PathPlanner *pathPlanner;
- OccupancyGrid roomRealMapFromMemory = hamster->getSLAMMap();
- MapDrawer* mapDrawer = new MapDrawer(roomRealMapFromMemory.getWidth(), roomRealMapFromMemory.getHeight());
+ OccupancyGrid ogrid = hamster->getSLAMMap();
+ MapDrawer* mapDrawer = new MapDrawer(ogrid.getWidth(), ogrid.getHeight());
 
 
- mapDrawer->DrawMap(&roomRealMapFromMemory, 0);
- cv::Mat* drawedMap = new cv::Mat(roomRealMapFromMemory.getWidth(), roomRealMapFromMemory.getHeight(),CV_8UC3,cv::Scalar(0,0,0));
+ mapDrawer->DrawMap(&ogrid, 0);
+ cv::Mat* drawedMap = new cv::Mat(ogrid.getWidth(), ogrid.getHeight(),CV_8UC3,cv::Scalar(0,0,0));
  rotateMapOnOrigin(mapDrawer->getMap(), drawedMap, MAP_ROTATION);
 
- // Init nodemaps
+ // Init MapMatrixs
  roomRealMap.loadMap(drawedMap);
  roomBlownMap.loadBlowMap(drawedMap);
 
  // Init the robot start and goal positions
- Node *startPos = roomBlownMap.getNodeAtIndex(ROBOT_START_X, ROBOT_START_Y);
- Node *goalPos = roomBlownMap.getNodeAtIndex(GOAL_X, GOAL_Y);
+ MapCell *startPos = roomBlownMap.getMapCellAtIndex(ROBOT_START_X, ROBOT_START_Y);
+ MapCell *goalPos = roomBlownMap.getMapCellAtIndex(GOAL_X, GOAL_Y);
 
- cout << "Is goal an obstacle: " << roomBlownMap.getNodeAtIndex(goalPos->getX(), goalPos->getY())->getIsObstacle() << endl;
+ cout << "Is goal an obstacle: " << roomBlownMap.getMapCellAtIndex(goalPos->getX(), goalPos->getY())->getIsObstacle() << endl;
 
  // Find the path
  pathPlanner->findShortestPath(&roomBlownMap,startPos,goalPos);
 
  // Mark the waypoints
- std::list<Node* > waypoints = pathPlanner->markWaypoints(startPos, goalPos);
+ std::list<MapCell* > waypoints = pathPlanner->markWaypoints(startPos, goalPos);
 
  // First draw
- mapDrawer->DrawMap(&roomRealMapFromMemory, MAP_ROTATION);
- mapDrawer->DrawNodeMap(&roomBlownMap);
+ mapDrawer->DrawMap(&ogrid, MAP_ROTATION);
+ mapDrawer->DrawMapMatrix(&roomBlownMap);
  mapDrawer->DrawPath(goalPos);
 
 
@@ -101,24 +101,24 @@ void startRobotAction() {
  struct positionState startPositionState = {.pos = startPosition, .yaw = robotStartPose.getHeading()};
 
 
- double mapResolution = roomRealMapFromMemory.getResolution();
+ double mapResolution = ogrid.getResolution();
 
  LocalizationManager* localizationManager = new LocalizationManager(drawedMap, hamster, mapResolution);
- Robot robot(hamster,localizationManager, roomRealMapFromMemory.getHeight(), roomRealMapFromMemory.getWidth(), mapResolution);
+ Robot robot(hamster,localizationManager, ogrid.getHeight(), ogrid.getWidth(), mapResolution);
  localizationManager->InitParticalesOnMap(&startPositionState);
 
- //initializeParticalesOnRobot(roomRealMapFromMemory, roomBlownMap, localizationManager, mapDrawer, goalPos);
+ //initializeParticalesOnRobot(ogrid, roomBlownMap, localizationManager, mapDrawer, goalPos);
 
  //mapDrawer->DrawRobot(robot.GetRealHamsterLocation());
  MovementManager movementManager(&robot, mapDrawer);
 
 if(hamster->isConnected()) {
  // foreach waypoint
- for (std::list<Node*>::reverse_iterator iter = waypoints.rbegin(); iter != waypoints.rend(); ++iter)
+ for (std::list<MapCell*>::reverse_iterator iter = waypoints.rbegin(); iter != waypoints.rend(); ++iter)
 	{
-		Node* currWaypoint = *iter;
+		MapCell* currWaypoint = *iter;
 
-		Node hamsterWaypoint = ConvertToHamsterLocation(currWaypoint);
+		MapCell hamsterWaypoint = ConvertToHamsterLocation(currWaypoint);
 		robot.realLocation = robot.currBeliefedLocation = robot.GetRealHamsterLocation();
 
 		if (isWaypointReached(robot.currBeliefedLocation, hamsterWaypoint))

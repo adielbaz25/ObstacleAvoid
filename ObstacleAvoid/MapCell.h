@@ -1,9 +1,9 @@
-#ifndef NODE_H_
-#define NODE_H_
+#ifndef MapCell_H_
+#define MapCell_H_
 
 #include <cstdlib>
 
-class Node
+class MapCell
 {
 	bool _isObstacle;
 	bool _isInOpenList;
@@ -14,7 +14,7 @@ class Node
 	double _f;
 	double _x;
 	double _y;
-	Node* _parent;
+	MapCell* _parent;
 
 
 public:
@@ -36,16 +36,16 @@ public:
 	void setY(double y);
 	double getF() const;
 	void setF(double f);
-	Node* getParent() const;
-	void setParent(Node* parent);
-	Node();
-	Node(double x, double y);
-	virtual ~Node();
+	MapCell* getParent() const;
+	void setParent(MapCell* parent);
+	MapCell();
+	MapCell(double x, double y);
+	virtual ~MapCell();
 
 
-	bool operator<(const Node& node) const
+	bool operator<(const MapCell& MapCell) const
 	{
-		if ((_y < node._y) || (_y == node._y && _x <= node._x))
+		if ((_y < MapCell._y) || (_y == MapCell._y && _x <= MapCell._x))
 		{
 			return true;
 		}
@@ -54,5 +54,5 @@ public:
 	}
 };
 
-#endif  NODE_H_
+#endif  MapCell_H_
 

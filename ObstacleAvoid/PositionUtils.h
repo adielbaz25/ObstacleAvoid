@@ -10,8 +10,8 @@
 #include "PositionUtils.h"
 #include "Structs.h"
 #include <math.h>
-#include "Node.h"
+#include "MapCell.h"
 
-Node ConvertToHamsterLocation(Node* waypoint);
+MapCell ConvertToHamsterLocation(MapCell* waypoint);
 
 #endif /* UTILS_POSITIONUTILS_H_ */

@@ -4,7 +4,7 @@
 #include <set>
 #include <math.h>
 #include "Structs.h"
-#include "NodeMap.h"
+#include "MapMatrix.h"
 #include "Constants.h"
 
 using namespace std;
@@ -12,17 +12,17 @@ using namespace std;
 class PathPlanner
 {
 public:
-	double calculateDistance(Node* source, Node* target);
-	void initializeHuristicValues(NodeMap* map, Node* goalNode);
-	bool isNodeInList(set<Node>* list, int rowIndex, int colIndex);
-	void handleNeighbors(NodeMap* map, Node* currNode, Node* goalNode,
-			set<Node*>* openList, set<Node*>* closedList);
-	void findShortestPath(NodeMap* map, Node* startNode, Node* goalNode);
-	std::list<Node* > markWaypoints(Node * start, Node * currNode);
+	double calculateDistance(MapCell* source, MapCell* target);
+	void initializeHuristicValues(MapMatrix* map, MapCell* goalMapCell);
+	bool isMapCellInList(set<MapCell>* list, int rowIndex, int colIndex);
+	void handleNeighbors(MapMatrix* map, MapCell* currMapCell, MapCell* goalMapCell,
+			set<MapCell*>* openList, set<MapCell*>* closedList);
+	void findShortestPath(MapMatrix* map, MapCell* startMapCell, MapCell* goalMapCell);
+	std::list<MapCell* > markWaypoints(MapCell * start, MapCell * currMapCell);
 
 private:
-	Node* getMinimalFNode(set<Node*>* openList);
-	double getShipua(Node* a, Node* b);
+	MapCell* getMinimalFMapCell(set<MapCell*>* openList);
+	double getShipua(MapCell* a, MapCell* b);
 };
 
 #endif  PATHPLANNER_H_

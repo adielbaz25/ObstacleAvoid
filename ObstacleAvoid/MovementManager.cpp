@@ -9,7 +9,7 @@ MovementManager::MovementManager(Robot * robot, MapDrawer* mapDrawer)
 	this->mapDrawer = mapDrawer;
 }
 
-void MovementManager::NavigateToWaypoint(Node* waypoint)
+void MovementManager::NavigateToWaypoint(MapCell* waypoint)
 {
 	this->waypoint = waypoint;
 	robot->realLocation = robot->prevBeliefedLocation = robot->currBeliefedLocation = robot->GetRealHamsterLocation();
@@ -76,7 +76,7 @@ bool MovementManager::isDeltaAngleOnEndOfCiricle() {
 		   (robot->currBeliefedLocation.yaw > (360 - YAW_TOLERANCE) && targetYaw < YAW_TOLERANCE);
 }
 
-void MovementManager::calculateTargetYaw(Node* waypoint)
+void MovementManager::calculateTargetYaw(MapCell* waypoint)
 {
 	targetYaw = getYawInOneCiricle(convertRadiansToDegrees(atan2((waypoint->getY() - robot->currBeliefedLocation.pos.y),
 																(waypoint->getX() - robot->currBeliefedLocation.pos.x))));

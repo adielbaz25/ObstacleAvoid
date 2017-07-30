@@ -1,40 +1,40 @@
-#include "NodeMap.h"
+#include "MapMatrix.h"
 
-NodeMap::NodeMap()
+MapMatrix::MapMatrix()
 {
 }
 
-NodeMap::~NodeMap()
+MapMatrix::~MapMatrix()
 {
-	// TODO Iterate over the 2D vector and deallocate every Node reference
+	// TODO Iterate over the 2D vector and deallocate every MapCell reference
 }
 
-int NodeMap::getWidth() const
+int MapMatrix::getWidth() const
 {
 	return _matrix.size();
 }
 
-int NodeMap::getHeight() const
+int MapMatrix::getHeight() const
 {
 	return _matrix[0].size();
 }
 
-Node* NodeMap::getNodeAtIndex(int x, int y) const
+MapCell* MapMatrix::getMapCellAtIndex(int x, int y) const
 {
 	return _matrix[y][x];
 }
 
-void NodeMap::loadMap(cv::Mat* map)
+void MapMatrix::loadMap(cv::Mat* map)
 {
 	unsigned mapWidth = map->cols;
 	unsigned mapHeight = map->rows;
 
-	vector<vector<Node*> > matrix(mapWidth, vector<Node*>(mapHeight));
+	vector<vector<MapCell*> > matrix(mapWidth, vector<MapCell*>(mapHeight));
 
 	for (unsigned y = 0; y < mapHeight; y++)
 	{
 		for (unsigned x = 0; x < mapWidth; x++) {
-			matrix[y][x] = new Node(x, y);
+			matrix[y][x] = new MapCell(x, y);
 
 			cv::Vec3b coloredPoint = map->at<cv::Vec3b>(y, x);
 			matrix[y][x]->setIsObstacle(coloredPoint[0] == 0 && coloredPoint[1] == 0 && coloredPoint[2] == 0);
@@ -45,7 +45,7 @@ void NodeMap::loadMap(cv::Mat* map)
 }
 
 // Creates a new image from the source file where every obstacle is blown up
-void NodeMap::loadBlowMap(cv::Mat* map)
+void MapMatrix::loadBlowMap(cv::Mat* map)
 {
 	loadMap(map);
 
@@ -57,23 +57,23 @@ void NodeMap::loadBlowMap(cv::Mat* map)
 	unsigned mapWidth = map->cols;
 	unsigned mapHeight = map->rows;
 
-	std::list<Node*> obstacles;
+	std::list<MapCell*> obstacles;
 
-	// We only want half of the actual robot size
+	// Expand size is half of the robot size
 	robotSizeCm /= 2;
 
 	// Blow the map
 	robotSizeCm *= BLOW_ROBOT_FACTOR;
 
-	// Calculates the blow range
-	unsigned blowRange = NodeMap::calculateBlowRange(robotSizeCm, resolutionCm);
+	// Calculates the expand range
+	unsigned blowRange = ceil(robotSizeCm / resolutionCm);
 
 	// Looping to scan the original map
 	for (unsigned y = 0; y < mapHeight; y++)
 	{
 		for (unsigned x = 0; x < mapWidth; x++)
 		{
-			// Checks if the original node is obstacle
+			// Checks if the original MapCell is obstacle
 			if (_matrix[y][x]->getIsObstacle())
 			{
 				obstacles.push_front(_matrix[y][x]);
@@ -81,10 +81,10 @@ void NodeMap::loadBlowMap(cv::Mat* map)
 		}
 	}
 
-	std::list<Node*>::const_iterator iterator;
+	std::list<MapCell*>::const_iterator iterator;
 	for (iterator = obstacles.begin(); iterator != obstacles.end(); ++iterator) {
 
-			// Calculates a rectangle to set as obstacles around the current node
+			// Calculates a rectangle to set as obstacles around the current MapCell
 					currRec = getCurrentRectangle(blowRange, (*iterator)->getX(), (*iterator)->getY(),
 							mapWidth, mapHeight);
 
@@ -93,7 +93,7 @@ void NodeMap::loadBlowMap(cv::Mat* map)
 					{
 						for (unsigned neighborX = currRec.startingX; neighborX < currRec.endingX; neighborX++)
 						{
-							// Sets the current neighbor node as obstacle obstacle
+							// Sets the current neighbor MapCell as obstacle obstacle
 							_matrix[neighborY][neighborX]->setIsObstacle(true);
 						}
 					}
@@ -102,13 +102,13 @@ void NodeMap::loadBlowMap(cv::Mat* map)
 }
 
 
-bool NodeMap::isAreaAnObstacle(int colIndex, int rowIndex, int resolution) const
+bool MapMatrix::isAreaAnObstacle(int colIndex, int rowIndex, int resolution) const
 {
 	for (int i = colIndex * resolution; i < (colIndex * resolution) + resolution; i++)
 	{
 		for (int j = rowIndex * resolution; j < (rowIndex * resolution) + resolution; j++)
 		{
-			if (getNodeAtIndex(i, j)->getIsObstacle())
+			if (getMapCellAtIndex(i, j)->getIsObstacle())
 			{
 				return true;
 			}
@@ -118,16 +118,8 @@ bool NodeMap::isAreaAnObstacle(int colIndex, int rowIndex, int resolution) const
 	return false;
 }
 
-// Calculates the blow range from the robot size and resolution
-int NodeMap::calculateBlowRange(double robotSizeCm, double resolutionCm)
-{
-	int blowRange = ceil(robotSizeCm / resolutionCm);
-
-	return blowRange;
-}
-
 // Calculates a rectangle that wraps the current index
-rectangle NodeMap::getCurrentRectangle(int blowRange, unsigned currX, unsigned currY, unsigned width, unsigned height)
+rectangle MapMatrix::getCurrentRectangle(int blowRange, unsigned currX, unsigned currY, unsigned width, unsigned height)
 {
 	struct rectangle result;
 
