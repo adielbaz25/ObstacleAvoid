@@ -24,7 +24,7 @@ class MovementManager
 private:
 	Robot * robot;
 	MapDrawer* mapDrawer;
-	MapCell * waypoint;
+	Node * waypoint;
 	double distanceFromWaypoint;
 	double targetYaw, deltaYaw;
 
@@ -38,13 +38,13 @@ private:
 	bool isRequiredAngleAdjustment();
 	bool isDeltaAngleOnEndOfCiricle();
 	float calculateWheelsAngle();
-	void calculateTargetYaw(MapCell* waypoint);
+	void calculateTargetYaw(Node* waypoint);
 	void stopMoving();
 	void recalculateDeltaYaw();
 
 public:
 	MovementManager(Robot * robot, MapDrawer* mapDrawer);
-	void NavigateToWaypoint(MapCell * waypoint);
+	void NavigateToWaypoint(Node * waypoint);
 	virtual ~MovementManager();
 };
 

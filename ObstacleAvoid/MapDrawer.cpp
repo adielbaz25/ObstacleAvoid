@@ -44,7 +44,7 @@ void MapDrawer::DrawMapMatrix(MapMatrix* MapMatrix)
 
 	for (int y = 0; y < height; y++) {
 	     for (int x = 0; x < width; x++) {
-	      if (MapMatrix->getMapCellAtIndex(y,x)->getIsObstacle())
+	      if (MapMatrix->getNodeAtIndex(y,x)->getIsObstacle())
 	      {
 	    	  MapDrawer::SetPointType(x, y, Obstacle);
 	      }
@@ -63,28 +63,28 @@ void MapDrawer::DrawRobot(positionState pos, cv::Mat * map)
 	cv:circle(*map, *position,4,*color,1,8,0);
 }
 
-void MapDrawer::DrawPath(MapCell* goal)
+void MapDrawer::DrawPath(Node* goal)
 {
 	MapDrawer::SetPointType(goal->getY() , goal->getX() , PathEnd);
 
-	MapCell* currentMapCell = goal->getParent();
-	while(currentMapCell != NULL)
+	Node* currentNode = goal->getParent();
+	while(currentNode != NULL)
 	{
-		MapCell* nextMapCell = currentMapCell->getParent();
+		Node* nextNode = currentNode->getParent();
 
-		if(nextMapCell == NULL) {
-			MapDrawer::SetPointType(currentMapCell->getY() ,currentMapCell->getX()  , PathStart);
+		if(nextNode == NULL) {
+			MapDrawer::SetPointType(currentNode->getY() ,currentNode->getX()  , PathStart);
 		}
-		else if(currentMapCell->getIsWaypoint())
+		else if(currentNode->getIsWaypoint())
 		{
-			MapDrawer::SetPointType(currentMapCell->getY() ,currentMapCell->getX() , Waypoint);
+			MapDrawer::SetPointType(currentNode->getY() ,currentNode->getX() , Waypoint);
 		}
 		else
 		{
-			MapDrawer::SetPointType(currentMapCell->getY() ,currentMapCell->getX() , Path);
+			MapDrawer::SetPointType(currentNode->getY() ,currentNode->getX() , Path);
 		}
 
-		currentMapCell = nextMapCell;
+		currentNode = nextNode;
 	}
 
 	MapDrawer::SetPointType(goal->getY() ,goal->getX() , PathStart);

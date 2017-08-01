@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <HamsterAPIClientCPP/Hamster.h>
-#include "MapCell.h"
+#include "Node.h"
 #include "Constants.h"
 #include "Structs.h"
 #include "PositionUtils.h"
@@ -14,15 +14,15 @@ using namespace HamsterAPI;
 class MapMatrix
 {
 	private:
-		vector<vector<MapCell*> > _matrix;
+		vector<vector<Node*> > _matrix;
 		rectangle getCurrentRectangle(int blowRange, unsigned currX, unsigned currY, unsigned width, unsigned height);
 
 	public:
 		int getWidth() const;
 		int getHeight() const;
-		MapCell* getMapCellAtIndex(int x, int y) const;
+		Node* getNodeAtIndex(int x, int y) const;
 		void loadMap(cv::Mat* ogrid);
-		void loadBlowMap(cv::Mat* ogrid);
+		void loadBlowMap(cv::Mat* map);
 		bool isAreaAnObstacle(int colIndex, int rowIndex, int resolution) const;
 		MapMatrix();
 		virtual ~MapMatrix();

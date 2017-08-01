@@ -2,12 +2,12 @@
 #define UTILS_POSITIONUTILS_H_
 #include "Structs.h"
 #include <math.h>
-#include "MapCell.h"
+#include "Node.h"
 #include "Constants.h"
 
-MapCell ConvertToHamsterLocation(MapCell* waypoint)
+Node ConvertToHamsterLocation(Node* waypoint)
 {
-	MapCell hamsterLocation(waypoint->getX()- ROBOT_START_X, waypoint->getY() - ROBOT_START_Y);
+	Node hamsterLocation(waypoint->getX()- ROBOT_START_X, waypoint->getY() - ROBOT_START_Y);
 
 	return hamsterLocation;
 }

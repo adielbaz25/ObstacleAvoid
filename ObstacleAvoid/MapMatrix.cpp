@@ -6,7 +6,7 @@ MapMatrix::MapMatrix()
 
 MapMatrix::~MapMatrix()
 {
-	// TODO Iterate over the 2D vector and deallocate every MapCell reference
+	// TODO Iterate over the 2D vector and deallocate every Node reference
 }
 
 int MapMatrix::getWidth() const
@@ -19,7 +19,7 @@ int MapMatrix::getHeight() const
 	return _matrix[0].size();
 }
 
-MapCell* MapMatrix::getMapCellAtIndex(int x, int y) const
+Node* MapMatrix::getNodeAtIndex(int x, int y) const
 {
 	return _matrix[y][x];
 }
@@ -29,12 +29,12 @@ void MapMatrix::loadMap(cv::Mat* map)
 	unsigned mapWidth = map->cols;
 	unsigned mapHeight = map->rows;
 
-	vector<vector<MapCell*> > matrix(mapWidth, vector<MapCell*>(mapHeight));
+	vector<vector<Node*> > matrix(mapWidth, vector<Node*>(mapHeight));
 
 	for (unsigned y = 0; y < mapHeight; y++)
 	{
 		for (unsigned x = 0; x < mapWidth; x++) {
-			matrix[y][x] = new MapCell(x, y);
+			matrix[y][x] = new Node(x, y);
 
 			cv::Vec3b coloredPoint = map->at<cv::Vec3b>(y, x);
 			matrix[y][x]->setIsObstacle(coloredPoint[0] == 0 && coloredPoint[1] == 0 && coloredPoint[2] == 0);
@@ -45,6 +45,7 @@ void MapMatrix::loadMap(cv::Mat* map)
 }
 
 // Creates a new image from the source file where every obstacle is blown up
+
 void MapMatrix::loadBlowMap(cv::Mat* map)
 {
 	loadMap(map);
@@ -57,7 +58,7 @@ void MapMatrix::loadBlowMap(cv::Mat* map)
 	unsigned mapWidth = map->cols;
 	unsigned mapHeight = map->rows;
 
-	std::list<MapCell*> obstacles;
+	std::list<Node*> obstacles;
 
 	// Expand size is half of the robot size
 	robotSizeCm /= 2;
@@ -66,14 +67,14 @@ void MapMatrix::loadBlowMap(cv::Mat* map)
 	robotSizeCm *= BLOW_ROBOT_FACTOR;
 
 	// Calculates the expand range
-	unsigned blowRange = ceil(robotSizeCm / resolutionCm);
+	int blowRange = ceil(robotSizeCm / resolutionCm);
 
 	// Looping to scan the original map
 	for (unsigned y = 0; y < mapHeight; y++)
 	{
 		for (unsigned x = 0; x < mapWidth; x++)
 		{
-			// Checks if the original MapCell is obstacle
+			// Checks if the original Node is obstacle
 			if (_matrix[y][x]->getIsObstacle())
 			{
 				obstacles.push_front(_matrix[y][x]);
@@ -81,10 +82,10 @@ void MapMatrix::loadBlowMap(cv::Mat* map)
 		}
 	}
 
-	std::list<MapCell*>::const_iterator iterator;
+	std::list<Node*>::const_iterator iterator;
 	for (iterator = obstacles.begin(); iterator != obstacles.end(); ++iterator) {
 
-			// Calculates a rectangle to set as obstacles around the current MapCell
+			// Calculates a rectangle to set as obstacles around the current Node
 					currRec = getCurrentRectangle(blowRange, (*iterator)->getX(), (*iterator)->getY(),
 							mapWidth, mapHeight);
 
@@ -93,7 +94,7 @@ void MapMatrix::loadBlowMap(cv::Mat* map)
 					{
 						for (unsigned neighborX = currRec.startingX; neighborX < currRec.endingX; neighborX++)
 						{
-							// Sets the current neighbor MapCell as obstacle obstacle
+							// Sets the current neighbor Node as obstacle obstacle
 							_matrix[neighborY][neighborX]->setIsObstacle(true);
 						}
 					}
@@ -101,14 +102,13 @@ void MapMatrix::loadBlowMap(cv::Mat* map)
 
 }
 
-
 bool MapMatrix::isAreaAnObstacle(int colIndex, int rowIndex, int resolution) const
 {
 	for (int i = colIndex * resolution; i < (colIndex * resolution) + resolution; i++)
 	{
 		for (int j = rowIndex * resolution; j < (rowIndex * resolution) + resolution; j++)
 		{
-			if (getMapCellAtIndex(i, j)->getIsObstacle())
+			if (getNodeAtIndex(i, j)->getIsObstacle())
 			{
 				return true;
 			}

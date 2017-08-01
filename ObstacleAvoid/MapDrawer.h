@@ -3,7 +3,7 @@
 
 #include <HamsterAPIClientCPP/Hamster.h>
 #include "MapPointType.cpp"
-#include "MapCell.h"
+#include "Node.h"
 #include "MapMatrix.h"
 #include "LocalizationParticle.h"
 #include "PositionUtils.h"
@@ -24,7 +24,7 @@ public:
 	void SetPointType(int x, int y, MapPointType mapPointType);
 	void DrawMap(OccupancyGrid* occupancyGridMap, double rotationAngle);
 	void DrawMapMatrix(MapMatrix* MapMatrix);
-	void DrawPath(MapCell* goal);
+	void DrawPath(Node* goal);
 	void DrawRobot(positionState pos, cv::Mat * map);
 	void Show(positionState robotPos);
 	double DrawPatricles(std::vector<LocalizationParticle *>* particles);

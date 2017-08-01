@@ -1,105 +1,105 @@
 #include "PathPlanner.h"
 
-void PathPlanner::findShortestPath(MapMatrix* map, MapCell* startMapCell, MapCell* goalMapCell)
+void PathPlanner::findShortestPath(MapMatrix* map, Node* startNode, Node* goalNode)
 {
-	set<MapCell*> openList;
-	set<MapCell*> closedList;
-	MapCell* currMapCell;
+	set<Node*> openList;
+	set<Node*> closedList;
+	Node* currNode;
 
-	initializeHuristicValues(map, goalMapCell);
-	closedList.insert(startMapCell);
-	startMapCell->setIsInClosedList(true);
-	handleNeighbors(map, startMapCell, goalMapCell, &openList, &closedList);
+	initializeHuristicValues(map, goalNode);
+	closedList.insert(startNode);
+	startNode->setIsInClosedList(true);
+	handleNeighbors(map, startNode, goalNode, &openList, &closedList);
 
 	while(!openList.empty())
 	{
-		currMapCell = getMinimalFMapCell(&openList);
+		currNode = getMinimalFNode(&openList);
 
-		openList.erase(currMapCell);
-		currMapCell->setIsInOpenList(false);
-		closedList.insert(currMapCell);
-		currMapCell->setIsInClosedList(true);
+		openList.erase(currNode);
+		currNode->setIsInOpenList(false);
+		closedList.insert(currNode);
+		currNode->setIsInClosedList(true);
 
-		handleNeighbors(map, currMapCell, goalMapCell, &openList, &closedList);
+		handleNeighbors(map, currNode, goalNode, &openList, &closedList);
 
 	}
 }
 
-void PathPlanner::initializeHuristicValues(MapMatrix* map, MapCell* goalMapCell)
+void PathPlanner::initializeHuristicValues(MapMatrix* map, Node* goalNode)
 {
 	for (int rowIndex = 0; rowIndex < map->getHeight(); rowIndex++)
 	{
 		for (int colIndex = 0; colIndex < map->getWidth(); colIndex++)
 		{
-			MapCell* currMapCell = map->getMapCellAtIndex(colIndex, rowIndex);
+			Node* currNode = map->getNodeAtIndex(colIndex, rowIndex);
 
-			if (!currMapCell->getIsObstacle())
+			if (!currNode->getIsObstacle())
 			{
-				currMapCell->setH(calculateDistance(currMapCell, goalMapCell));
+				currNode->setH(calculateDistance(currNode, goalNode));
 			}
 		}
 	}
 }
 
-double PathPlanner::calculateDistance(MapCell* source, MapCell* target)
+double PathPlanner::calculateDistance(Node* source, Node* target)
 {
 	return sqrt(pow(source->getX() - target->getX(), 2) + pow(source->getY() - target->getY(), 2));
 }
 
-void PathPlanner::handleNeighbors(MapMatrix* map, MapCell* currMapCell, MapCell* goalMapCell,
-		set<MapCell*>* openList, set<MapCell*>* closedList)
+void PathPlanner::handleNeighbors(MapMatrix* map, Node* currNode, Node* goalNode,
+		set<Node*>* openList, set<Node*>* closedList)
 {
-	for (int rowIndex = currMapCell->getY() - 1; rowIndex <= currMapCell->getY() + 1; rowIndex++)
+	for (int rowIndex = currNode->getY() - 1; rowIndex <= currNode->getY() + 1; rowIndex++)
 	{
-		for (int colIndex = currMapCell->getX() - 1; colIndex <= currMapCell->getX() + 1; colIndex++)
+		for (int colIndex = currNode->getX() - 1; colIndex <= currNode->getX() + 1; colIndex++)
 		{
 			//cout << "X: " << colIndex << " Y: " << rowIndex << endl;
 
 			// Checks if we're out of bounds and if the current neighbor is not an obstacle
 			if (colIndex >= 0 && rowIndex >= 0 &&
 				colIndex < map->getWidth() && rowIndex < map->getHeight() &&
-				!map->getMapCellAtIndex(colIndex, rowIndex)->getIsObstacle())
+				!map->getNodeAtIndex(colIndex, rowIndex)->getIsObstacle())
 			{
-				// Makes sure the current MapCell is not scanned
-				if (colIndex != currMapCell->getX() || rowIndex != currMapCell->getY())
+				// Makes sure the current Node is not scanned
+				if (colIndex != currNode->getX() || rowIndex != currNode->getY())
 				{
 					// Checks if the current neighbor is in the closed list
 
-					//if (!isMapCellInList(closedList, colIndex, rowIndex))
+					//if (!isNodeInList(closedList, colIndex, rowIndex))
 					//{
-					MapCell* currNeighbor = map->getMapCellAtIndex(colIndex, rowIndex);
+					Node* currNeighbor = map->getNodeAtIndex(colIndex, rowIndex);
 
 					if (!currNeighbor->getIsInClosedList())
 					{
 						double tempGCost =
-							calculateDistance(currMapCell, currNeighbor) + currMapCell->getG();
+							calculateDistance(currNode, currNeighbor) + currNode->getG();
 
 						// Checks if the current neighbor is already in the open list
 						if (!currNeighbor->getIsInOpenList())
 						{
 							currNeighbor->setG(tempGCost);
 							currNeighbor->setF(currNeighbor->getH() + tempGCost);
-							currNeighbor->setParent(currMapCell);
+							currNeighbor->setParent(currNode);
 
 							// Checking if we have reached the goal
-							if (goalMapCell->getX() == colIndex && goalMapCell->getY() == rowIndex)
+							if (goalNode->getX() == colIndex && goalNode->getY() == rowIndex)
 							{
 								openList->clear();
 								return;
 							}
 
-							// Adding the MapCell to the open list for the first time
+							// Adding the Node to the open list for the first time
 							openList->insert(currNeighbor);
 							currNeighbor->setIsInOpenList(true);
 						}
-						// The MapCell was already in the open list, check if we found a shorter path
+						// The Node was already in the open list, check if we found a shorter path
 						else
 						{
 							if (tempGCost < currNeighbor->getG())
 							{
 								currNeighbor->setG(tempGCost);
 								currNeighbor->setF(currNeighbor->getH() + tempGCost);
-								currNeighbor->setParent(currMapCell);
+								currNeighbor->setParent(currNode);
 							}
 						}
 					}
@@ -109,53 +109,53 @@ void PathPlanner::handleNeighbors(MapMatrix* map, MapCell* currMapCell, MapCell*
 	}
 }
 
-MapCell* PathPlanner::getMinimalFMapCell(set<MapCell*>* openList)
+Node* PathPlanner::getMinimalFNode(set<Node*>* openList)
 {
-	MapCell* minMapCell = *(openList->begin());
-	MapCell* currMapCell;
+	Node* minNode = *(openList->begin());
+	Node* currNode;
 
-	for (set<MapCell*>::iterator iter = openList->begin(); iter != openList->end(); iter++)
+	for (set<Node*>::iterator iter = openList->begin(); iter != openList->end(); iter++)
 	{
-		currMapCell = *iter;
+		currNode = *iter;
 
-		if (currMapCell->getF() < minMapCell->getF())
+		if (currNode->getF() < minNode->getF())
 		{
-			minMapCell = currMapCell;
+			minNode = currNode;
 		}
 	}
 
-	return minMapCell;
+	return minNode;
 }
 
-std::list<MapCell* > PathPlanner::markWaypoints(MapCell * start, MapCell * currMapCell)
+std::list<Node* > PathPlanner::markWaypoints(Node * start, Node * currNode)
 {
-	std::list<MapCell* > waypoints;
-	MapCell* firstMapCell, *secondMapCell, *thirdMapCell;
-	firstMapCell = currMapCell;
-	secondMapCell = currMapCell->getParent();
+	std::list<Node* > waypoints;
+	Node* firstNode, *secondNode, *thirdNode;
+	firstNode = currNode;
+	secondNode = currNode->getParent();
 	int skipCounter = 0;
 
-	if(secondMapCell == NULL)
+	if(secondNode == NULL)
 	{
 		return waypoints;
 	}
 
-	while (firstMapCell->getX() != start->getX() || firstMapCell->getY() != start->getY())
+	while (firstNode->getX() != start->getX() || firstNode->getY() != start->getY())
 	{
 
-		thirdMapCell = secondMapCell->getParent();
+		thirdNode = secondNode->getParent();
 
-		if(thirdMapCell == NULL)
+		if(thirdNode == NULL)
 		{
-			waypoints.push_back(secondMapCell);
+			waypoints.push_back(secondNode);
 			return waypoints;
 		}
 
-		if((getShipua(firstMapCell,secondMapCell) != getShipua(secondMapCell,thirdMapCell)) ||
+		if((getShipua(firstNode,secondNode) != getShipua(secondNode,thirdNode)) ||
 				skipCounter >= WAYPOINT_TOLERENCE)
 		{
-			secondMapCell->setIsWaypoint(true);
-			waypoints.push_back(secondMapCell);
+			secondNode->setIsWaypoint(true);
+			waypoints.push_back(secondNode);
 			skipCounter = 0;
 		}
 		else
@@ -164,14 +164,14 @@ std::list<MapCell* > PathPlanner::markWaypoints(MapCell * start, MapCell * currM
 		}
 
 
-		firstMapCell = secondMapCell;
-		secondMapCell = thirdMapCell;
+		firstNode = secondNode;
+		secondNode = thirdNode;
 	}
 
 	return waypoints;
 }
 
-double PathPlanner::getShipua(MapCell *a, MapCell * b)
+double PathPlanner::getShipua(Node *a, Node * b)
 {
 	if (b->getX() - a->getX() == 0)
 		return 0;
