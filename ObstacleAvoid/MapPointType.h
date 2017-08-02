@@ -1,8 +1,8 @@
 /*
  * MapPointType.h
  *
- *  Created on: Jul 29, 2017
- *      Author: user
+ * Author: Adi Elbaz 206257313
+ *         Yuval Ron 313584187
  */
 
 #ifndef MAPPOINTTYPE_H_

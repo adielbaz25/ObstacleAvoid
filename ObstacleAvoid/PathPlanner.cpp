@@ -1,3 +1,10 @@
+/*
+ * PathPlanner.cpp
+ *
+ * Author: Adi Elbaz 206257313
+ *         Yuval Ron 313584187
+ */
+
 #include "PathPlanner.h"
 
 void PathPlanner::findShortestPath(MapMatrix* map, Node* startNode, Node* goalNode)
@@ -6,22 +13,29 @@ void PathPlanner::findShortestPath(MapMatrix* map, Node* startNode, Node* goalNo
 	set<Node*> closedList;
 	Node* currNode;
 
+	// Initalize the h* value of the nodes
 	initializeHuristicValues(map, goalNode);
+
+	// Calculate the f, g, h of the first node neighbors
+	handleNeighbors(map, startNode, goalNode, &openList, &closedList);
+
+	// Insert the source node to the closeList
 	closedList.insert(startNode);
 	startNode->setIsInClosedList(true);
-	handleNeighbors(map, startNode, goalNode, &openList, &closedList);
 
 	while(!openList.empty())
 	{
+		// Calculate the next node with the minimun F*
 		currNode = getMinimalFNode(&openList);
 
+		// Delete the node from the open list and add it to the close list
 		openList.erase(currNode);
 		currNode->setIsInOpenList(false);
 		closedList.insert(currNode);
 		currNode->setIsInClosedList(true);
 
+		// Calculate the f, g, h of the current node neighbors
 		handleNeighbors(map, currNode, goalNode, &openList, &closedList);
-
 	}
 }
 
@@ -53,8 +67,6 @@ void PathPlanner::handleNeighbors(MapMatrix* map, Node* currNode, Node* goalNode
 	{
 		for (int colIndex = currNode->getX() - 1; colIndex <= currNode->getX() + 1; colIndex++)
 		{
-			//cout << "X: " << colIndex << " Y: " << rowIndex << endl;
-
 			// Checks if we're out of bounds and if the current neighbor is not an obstacle
 			if (colIndex >= 0 && rowIndex >= 0 &&
 				colIndex < map->getWidth() && rowIndex < map->getHeight() &&
@@ -63,20 +75,19 @@ void PathPlanner::handleNeighbors(MapMatrix* map, Node* currNode, Node* goalNode
 				// Makes sure the current Node is not scanned
 				if (colIndex != currNode->getX() || rowIndex != currNode->getY())
 				{
-					// Checks if the current neighbor is in the closed list
-
-					//if (!isNodeInList(closedList, colIndex, rowIndex))
-					//{
 					Node* currNeighbor = map->getNodeAtIndex(colIndex, rowIndex);
 
+					// Checks if the current neighbor is not in the closed list
 					if (!currNeighbor->getIsInClosedList())
 					{
+						// Calculate the current node distance to its neighbor
 						double tempGCost =
-							calculateDistance(currNode, currNeighbor) + currNode->getG();
+								calculateDistance(currNode, currNeighbor) + currNode->getG();
 
-						// Checks if the current neighbor is already in the open list
+						// Checks if the current neighbor is not in the open list
 						if (!currNeighbor->getIsInOpenList())
 						{
+							// Initialize the values of the node for the first time
 							currNeighbor->setG(tempGCost);
 							currNeighbor->setF(currNeighbor->getH() + tempGCost);
 							currNeighbor->setParent(currNode);
@@ -92,6 +103,7 @@ void PathPlanner::handleNeighbors(MapMatrix* map, Node* currNode, Node* goalNode
 							openList->insert(currNeighbor);
 							currNeighbor->setIsInOpenList(true);
 						}
+
 						// The Node was already in the open list, check if we found a shorter path
 						else
 						{
@@ -142,7 +154,6 @@ std::list<Node* > PathPlanner::markWaypoints(Node * start, Node * currNode)
 
 	while (firstNode->getX() != start->getX() || firstNode->getY() != start->getY())
 	{
-
 		thirdNode = secondNode->getParent();
 
 		if(thirdNode == NULL)
@@ -163,7 +174,6 @@ std::list<Node* > PathPlanner::markWaypoints(Node * start, Node * currNode)
 			skipCounter++;
 		}
 
-
 		firstNode = secondNode;
 		secondNode = thirdNode;
 	}
@@ -178,6 +188,3 @@ double PathPlanner::getShipua(Node *a, Node * b)
 
 	return (b->getY() - a->getY()) / (b->getX() - a->getX());
 }
-
-
-

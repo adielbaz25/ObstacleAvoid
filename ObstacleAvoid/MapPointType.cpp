@@ -1,3 +1,10 @@
+/*
+ * MapPointType.cpp
+ *
+ * Author: Adi Elbaz 206257313
+ *         Yuval Ron 313584187
+ */
+
 #ifndef GUI_MAPPOINTTYPE_H_
 #define GUI_MAPPOINTTYPE_H_
 

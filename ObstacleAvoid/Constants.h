@@ -1,3 +1,10 @@
+/*
+ * Constants.h
+ *
+ * Author: Adi Elbaz 206257313
+ *         Yuval Ron 313584187
+ */
+
 #ifndef CONSTANTS_H_
 #define CONSTANTS_H_
 

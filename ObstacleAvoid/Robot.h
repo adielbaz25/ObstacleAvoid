@@ -1,3 +1,10 @@
+/*
+ * Robot.h
+ *
+ * Author: Adi Elbaz 206257313
+ *         Yuval Ron 313584187
+ */
+
 #ifndef ROBOT_H_
 #define ROBOT_H_
 

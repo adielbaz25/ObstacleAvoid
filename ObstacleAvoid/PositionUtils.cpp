@@ -1,3 +1,10 @@
+/*
+ * PositionUtils.cpp
+ *
+ * Author: Adi Elbaz 206257313
+ *         Yuval Ron 313584187
+ */
+
 #ifndef UTILS_POSITIONUTILS_H_
 #define UTILS_POSITIONUTILS_H_
 #include "Structs.h"

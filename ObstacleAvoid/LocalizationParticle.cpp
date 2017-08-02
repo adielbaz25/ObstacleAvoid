@@ -1,3 +1,9 @@
+/*
+ * LocalizationPracticle.cpp
+ *
+ * Author: Adi Elbaz 206257313
+ *         Yuval Ron 313584187
+ */
 
 #include "LocalizationParticle.h"
 

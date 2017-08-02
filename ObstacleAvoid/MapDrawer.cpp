@@ -1,3 +1,10 @@
+/*
+ * MapDrawer.cpp
+ *
+ * Author: Adi Elbaz 206257313
+ *         Yuval Ron 313584187
+ */
+
 #include "MapDrawer.h"
 
 MapDrawer::MapDrawer(int width, int height) : WINDOW_TITLE("Room-Map")

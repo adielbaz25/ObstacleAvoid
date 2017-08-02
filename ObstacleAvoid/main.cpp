@@ -1,3 +1,10 @@
+/*
+ * main.cpp
+ *
+ * Author: Adi Elbaz 206257313
+ *         Yuval Ron 313584187
+ */
+
 #include <HamsterAPIClientCPP/Hamster.h>
 #include <iostream>
 #include "MapMatrix.h"
@@ -37,14 +44,14 @@ bool isWaypointReached(const positionState& currLocation,
 
 void initializeParticalesOnRobot(OccupancyGrid ogrid,
 		MapMatrix roomBlownMap, LocalizationManager* localizationManager,
-		MapDrawer* mapDrawer, Node* goalPos) {
+		MapDrawer* mapDrawer, Node* DestPos) {
 	cout << "Initialize particales on robot" << endl;
 	double bestParticalesAvrageBelief = 0;
 	while (bestParticalesAvrageBelief < TARGET_START_BELIEF) {
 		localizationManager->moveParticales(0, 0, 0);
 		mapDrawer->DrawMap(&ogrid, MAP_ROTATION);
 		mapDrawer->DrawMapMatrix(&roomBlownMap);
-		mapDrawer->DrawPath(goalPos);
+		mapDrawer->DrawPath(DestPos);
 		bestParticalesAvrageBelief = mapDrawer->DrawPatricles(
 				localizationManager->getParticles());
 		positionState a;
@@ -66,31 +73,29 @@ void startRobotAction() {
  OccupancyGrid ogrid = hamster->getSLAMMap();
  MapDrawer* mapDrawer = new MapDrawer(ogrid.getWidth(), ogrid.getHeight());
 
-
  mapDrawer->DrawMap(&ogrid, 0);
- cv::Mat* drawedMap = new cv::Mat(ogrid.getWidth(), ogrid.getHeight(),CV_8UC3,cv::Scalar(0,0,0));
+ cv::Mat* drawedMap = new cv::Mat(ogrid.getWidth(), ogrid.getHeight(),CV_8UC3);
  rotateMapOnOrigin(mapDrawer->getMap(), drawedMap, MAP_ROTATION);
 
- // Init MapMatrix
+ // Init the blowed map
  roomBlownMap.loadBlowMap(drawedMap);
 
- // Init the robot start and goal positions
+ // Init the robot start and destination positions
  Node *startPos = roomBlownMap.getNodeAtIndex(ROBOT_START_X, ROBOT_START_Y);
- Node *goalPos = roomBlownMap.getNodeAtIndex(GOAL_X, GOAL_Y);
+ Node *DestPos = roomBlownMap.getNodeAtIndex(GOAL_X, GOAL_Y);
 
- cout << "Is goal an obstacle: " << roomBlownMap.getNodeAtIndex(goalPos->getX(), goalPos->getY())->getIsObstacle() << endl;
+ cout << "Is goal an obstacle: " << roomBlownMap.getNodeAtIndex(DestPos->getX(), DestPos->getY())->getIsObstacle() << endl;
 
  // Find the path
- pathPlanner->findShortestPath(&roomBlownMap,startPos,goalPos);
+ pathPlanner->findShortestPath(&roomBlownMap,startPos,DestPos);
 
  // Mark the waypoints
- std::list<Node* > waypoints = pathPlanner->markWaypoints(startPos, goalPos);
+ std::list<Node* > waypoints = pathPlanner->markWaypoints(startPos, DestPos);
 
  // First draw
  mapDrawer->DrawMap(&ogrid, MAP_ROTATION);
  mapDrawer->DrawMapMatrix(&roomBlownMap);
- mapDrawer->DrawPath(goalPos);
-
+ mapDrawer->DrawPath(DestPos);
 
  Pose robotStartPose = hamster->getPose();
  struct position startPosition = {.x =
@@ -105,7 +110,7 @@ void startRobotAction() {
  Robot robot(hamster,localizationManager, ogrid.getHeight(), ogrid.getWidth(), mapResolution);
  localizationManager->InitParticalesOnMap(&startPositionState);
 
- //initializeParticalesOnRobot(ogrid, roomBlownMap, localizationManager, mapDrawer, goalPos);
+ //initializeParticalesOnRobot(ogrid, roomBlownMap, localizationManager, mapDrawer, DestPos);
 
  //mapDrawer->DrawRobot(robot.GetRealHamsterLocation());
  MovementManager movementManager(&robot, mapDrawer);

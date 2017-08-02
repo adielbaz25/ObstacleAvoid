@@ -1,3 +1,10 @@
+/*
+ * MapMatrix.cpp
+ *
+ * Author: Adi Elbaz 206257313
+ *         Yuval Ron 313584187
+ */
+
 #include "MapMatrix.h"
 
 MapMatrix::MapMatrix()
@@ -44,8 +51,7 @@ void MapMatrix::loadMap(cv::Mat* map)
 
 }
 
-// Creates a new image from the source file where every obstacle is blown up
-
+// Blown up the obstacles in the map
 void MapMatrix::loadBlowMap(cv::Mat* map)
 {
 	loadMap(map);
@@ -84,20 +90,19 @@ void MapMatrix::loadBlowMap(cv::Mat* map)
 
 	std::list<Node*>::const_iterator iterator;
 	for (iterator = obstacles.begin(); iterator != obstacles.end(); ++iterator) {
+		// Calculates a range to set as obstacle around the current Node
+		currRec = MapMatrix::getObstacleNeighbors (blowRange, (*iterator)->getX(), (*iterator)->getY(),
+				mapWidth, mapHeight);
 
-			// Calculates a rectangle to set as obstacles around the current Node
-					currRec = getCurrentRectangle(blowRange, (*iterator)->getX(), (*iterator)->getY(),
-							mapWidth, mapHeight);
-
-					// Loops to set the neighbors in the blow range as obstacles
-					for (unsigned neighborY = currRec.startingY; neighborY < currRec.endingY; neighborY++)
-					{
-						for (unsigned neighborX = currRec.startingX; neighborX < currRec.endingX; neighborX++)
-						{
-							// Sets the current neighbor Node as obstacle obstacle
-							_matrix[neighborY][neighborX]->setIsObstacle(true);
-						}
-					}
+		// Loops to set the neighbors in the blow range as obstacles
+		for (unsigned neighborY = currRec.startingY; neighborY < currRec.endingY; neighborY++)
+		{
+			for (unsigned neighborX = currRec.startingX; neighborX < currRec.endingX; neighborX++)
+			{
+				// Sets the current neighbor Node as obstacle obstacle
+				_matrix[neighborY][neighborX]->setIsObstacle(true);
+			}
+		}
 	}
 
 }
@@ -118,50 +123,40 @@ bool MapMatrix::isAreaAnObstacle(int colIndex, int rowIndex, int resolution) con
 	return false;
 }
 
-// Calculates a rectangle that wraps the current index
-rectangle MapMatrix::getCurrentRectangle(int blowRange, unsigned currX, unsigned currY, unsigned width, unsigned height)
+// Return struct of the neighbors nodes of an obstacle
+rectangle MapMatrix::getObstacleNeighbors(int blowRange, unsigned currX, unsigned currY, unsigned width, unsigned height)
 {
 	struct rectangle result;
 
-	// Gets the leftmost upmost index
-	int startingY = currY - blowRange;
+	// Gets the left top point
+	result.startingY = currY - blowRange;
+	result.startingX = currX - blowRange;
 
-	// Checks if out of bounds
-	if (startingY < 0)
+	// Checks if the point is out of bounds
+	if (result.startingY < 0)
 	{
-		startingY = 0;
+		result.startingY = 0;
 	}
 
-	int startingX = currX - blowRange;
-
-	// Checks if out of bounds
-	if (startingX < 0)
+	if (result.startingX < 0)
 	{
-		startingX = 0;
+		result.startingX = 0;
 	}
 
-	// Gets the rightmost downmost index
-	unsigned endingY = currY + blowRange;
+	// Gets the right bottom point
+	result.endingY = currY + blowRange;
+	result.endingX = currX + blowRange;
 
-	// Checks if out of bounds
-	if (endingY > height)
+	// Checks if the point is out of bounds
+	if (result.endingY > height)
 	{
-		endingY = height;
+		result.endingY = height;
 	}
 
-	unsigned endingX = currX + blowRange;
-
-	// Checks if out of bounds
-	if (endingX > width)
+	if (result.endingX > width)
 	{
-		endingX = width;
+		result.endingX = width;
 	}
-
-	// Setting the result
-	result.startingX = startingX;
-	result.startingY = startingY;
-	result.endingX = endingX;
-	result.endingY = endingY;
 
 	return result;
 }

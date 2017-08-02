@@ -1,3 +1,10 @@
+/*
+ * MapMatrix.cpp
+ *
+ * Author: Adi Elbaz 206257313
+ *         Yuval Ron 313584187
+ */
+
 #ifndef MAP_H_
 #define MAP_H_
 
@@ -15,7 +22,7 @@ class MapMatrix
 {
 	private:
 		vector<vector<Node*> > _matrix;
-		rectangle getCurrentRectangle(int blowRange, unsigned currX, unsigned currY, unsigned width, unsigned height);
+		rectangle getObstacleNeighbors(int blowRange, unsigned currX, unsigned currY, unsigned width, unsigned height);
 
 	public:
 		int getWidth() const;

@@ -1,8 +1,8 @@
 /*
  * PositionUtils.h
  *
- *  Created on: Jul 8, 2017
- *      Author: user
+ * Author: Adi Elbaz 206257313
+ *         Yuval Ron 313584187
  */
 
 #ifndef UTILS_POSITIONUTILS_H_

@@ -1,5 +1,11 @@
-#include <HamsterAPIClientCPP/Hamster.h>
+/*
+ * AngleUtils.cpp
+ *
+ * Author: Adi Elbaz 206257313
+ *         Yuval Ron 313584187
+ */
 
+#include <HamsterAPIClientCPP/Hamster.h>
 #include "AngleUtils.h"
 #include "Constants.h"
 

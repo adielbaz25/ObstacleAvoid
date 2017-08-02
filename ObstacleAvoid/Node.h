@@ -1,3 +1,10 @@
+/*
+ * Node.h
+ *
+ * Author: Adi Elbaz 206257313
+ *         Yuval Ron 313584187
+ */
+
 #ifndef Node_H_
 #define Node_H_
 

@@ -1,3 +1,9 @@
+/*
+ * LocalizationManager.h
+ *
+ * Author: Adi Elbaz 206257313
+ *         Yuval Ron 313584187
+ */
 
 #ifndef LOCALIZATIONMANAGER_H_
 #define LOCALIZATIONMANAGER_H_

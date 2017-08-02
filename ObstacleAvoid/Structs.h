@@ -1,3 +1,10 @@
+/*
+ * Struct.h
+ *
+ * Author: Adi Elbaz 206257313
+ *         Yuval Ron 313584187
+ */
+
 #ifndef STRUCTS_H_
 #define STRUCTS_H_
 

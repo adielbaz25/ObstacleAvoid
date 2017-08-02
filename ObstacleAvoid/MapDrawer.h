@@ -1,3 +1,10 @@
+/*
+ * MapDrawer.h
+ *
+ * Author: Adi Elbaz 206257313
+ *         Yuval Ron 313584187
+ */
+
 #ifndef GUI_MAPDRAWER_H_
 #define GUI_MAPDRAWER_H_
 
