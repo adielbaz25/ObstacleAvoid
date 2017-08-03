@@ -25,7 +25,7 @@ void PathPlanner::findShortestPath(MapMatrix* map, Node* startNode, Node* goalNo
 
 	while(!openList.empty())
 	{
-		// Calculate the next node with the minimun F*
+		// Calculate the next node with the minimum F*
 		currNode = getMinimalFNode(&openList);
 
 		// Delete the node from the open list and add it to the close list
@@ -139,30 +139,35 @@ Node* PathPlanner::getMinimalFNode(set<Node*>* openList)
 	return minNode;
 }
 
-std::list<Node* > PathPlanner::markWaypoints(Node * start, Node * currNode)
+std::list<Node* > PathPlanner::markWaypoints(Node * start, Node * DestNode)
 {
 	std::list<Node* > waypoints;
 	Node* firstNode, *secondNode, *thirdNode;
-	firstNode = currNode;
-	secondNode = currNode->getParent();
+	firstNode = DestNode;
+	secondNode = DestNode->getParent();
 	int skipCounter = 0;
 
+	// Check if the destination node is not the start node
 	if(secondNode == NULL)
 	{
 		return waypoints;
 	}
 
+	// Loop on all the nodes in the path, from the destination to the first node
 	while (firstNode->getX() != start->getX() || firstNode->getY() != start->getY())
 	{
+		// Initialize the parent node of the current parent
 		thirdNode = secondNode->getParent();
 
+		// Check if we reached to the destination node
 		if(thirdNode == NULL)
 		{
 			waypoints.push_back(secondNode);
 			return waypoints;
 		}
 
-		if((getShipua(firstNode,secondNode) != getShipua(secondNode,thirdNode)) ||
+		// Check if there is an angle between the points or if its between the size to add waypoint
+		if((getIncline(firstNode,secondNode) != getIncline(secondNode,thirdNode)) ||
 				skipCounter >= WAYPOINT_TOLERENCE)
 		{
 			secondNode->setIsWaypoint(true);
@@ -181,7 +186,7 @@ std::list<Node* > PathPlanner::markWaypoints(Node * start, Node * currNode)
 	return waypoints;
 }
 
-double PathPlanner::getShipua(Node *a, Node * b)
+double PathPlanner::getIncline(Node *a, Node * b)
 {
 	if (b->getX() - a->getX() == 0)
 		return 0;

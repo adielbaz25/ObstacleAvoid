@@ -6,10 +6,8 @@
  */
 
 #include "LocalizationParticle.h"
-
 #include <HamsterAPIClientCPP/Hamster.h>
 #include <iostream>
-
 
 using namespace std;
 

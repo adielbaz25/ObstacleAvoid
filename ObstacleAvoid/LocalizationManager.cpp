@@ -11,8 +11,6 @@
 
 using namespace std;
 
-
-
 LocalizationManager::LocalizationManager(cv::Mat* map, Hamster *hamster, double mapResolution)
 {
 	this->hamster = hamster;
@@ -115,14 +113,12 @@ void LocalizationManager::createNeighborParticales(LocalizationParticle *badPart
 
 }
 
-
-
-
 void LocalizationManager::InitParticalesOnMap(positionState * ps)
 {
+	// Set the number of particles
 	particles.resize(NUM_OF_PARTICALES);
-	cv::Vec3b coloredPoint;
 
+	cv::Vec3b coloredPoint;
 	initSourceParticle(ps);
 
 	for (size_t i = 0; i < particles.size() - 1 ; i++)
@@ -364,4 +360,3 @@ double LocalizationManager::getBestBelief() {
 LocalizationManager::~LocalizationManager()
 {
 }
-

@@ -68,51 +68,61 @@ void startRobotAction() {
  hamster = new HamsterAPI::Hamster(1);
  sleep(3);
 
- MapMatrix roomBlownMap;
- PathPlanner *pathPlanner;
+ // Initialize the grid from the robot
  OccupancyGrid ogrid = hamster->getSLAMMap();
- MapDrawer* mapDrawer = new MapDrawer(ogrid.getWidth(), ogrid.getHeight());
 
+ // Initialize the MapDrawer
+ MapDrawer* mapDrawer = new MapDrawer(ogrid.getWidth(), ogrid.getHeight());
  mapDrawer->DrawMap(&ogrid, 0);
  cv::Mat* drawedMap = new cv::Mat(ogrid.getWidth(), ogrid.getHeight(),CV_8UC3);
  rotateMapOnOrigin(mapDrawer->getMap(), drawedMap, MAP_ROTATION);
 
- // Init the blowed map
+ // Initialize the blowed map logically
+ MapMatrix roomBlownMap;
  roomBlownMap.loadBlowMap(drawedMap);
 
- // Init the robot start and destination positions
+ // Initialize the robot start and destination positions nodes
  Node *startPos = roomBlownMap.getNodeAtIndex(ROBOT_START_X, ROBOT_START_Y);
  Node *DestPos = roomBlownMap.getNodeAtIndex(GOAL_X, GOAL_Y);
 
+ // Print the start and destination positions
  cout << "Is goal an obstacle: " << roomBlownMap.getNodeAtIndex(DestPos->getX(), DestPos->getY())->getIsObstacle() << endl;
 
  // Find the path
+ PathPlanner *pathPlanner;
  pathPlanner->findShortestPath(&roomBlownMap,startPos,DestPos);
 
  // Mark the waypoints
  std::list<Node* > waypoints = pathPlanner->markWaypoints(startPos, DestPos);
 
- // First draw
+ // Draw and rotate the map
  mapDrawer->DrawMap(&ogrid, MAP_ROTATION);
+
+ // Draw the extended obstacles
  mapDrawer->DrawMapMatrix(&roomBlownMap);
+
+ // Draw the path, path start, path end and waypoints
  mapDrawer->DrawPath(DestPos);
 
+ // Get the position of the robot
  Pose robotStartPose = hamster->getPose();
+
+ // Set the real robot position
  struct position startPosition = {.x =
 		 ROBOT_START_X + robotStartPose.getX(), .y = ROBOT_START_Y -  robotStartPose.getX()};
 
+ // Set the position start and yaw
  struct positionState startPositionState = {.pos = startPosition, .yaw = robotStartPose.getHeading()};
 
-
+ // Get the resolution of the map from hamster
  double mapResolution = ogrid.getResolution();
 
  LocalizationManager* localizationManager = new LocalizationManager(drawedMap, hamster, mapResolution);
  Robot robot(hamster,localizationManager, ogrid.getHeight(), ogrid.getWidth(), mapResolution);
+
+ // Initialize the particles on the map
  localizationManager->InitParticalesOnMap(&startPositionState);
 
- //initializeParticalesOnRobot(ogrid, roomBlownMap, localizationManager, mapDrawer, DestPos);
-
- //mapDrawer->DrawRobot(robot.GetRealHamsterLocation());
  MovementManager movementManager(&robot, mapDrawer);
 
 if(hamster->isConnected()) {
@@ -120,8 +130,8 @@ if(hamster->isConnected()) {
  for (std::list<Node*>::reverse_iterator iter = waypoints.rbegin(); iter != waypoints.rend(); ++iter)
 	{
 		Node* currWaypoint = *iter;
-
 		Node hamsterWaypoint = ConvertToHamsterLocation(currWaypoint);
+
 		robot.realLocation = robot.currBeliefedLocation = robot.GetRealHamsterLocation();
 
 		if (isWaypointReached(robot.currBeliefedLocation, hamsterWaypoint))
@@ -138,6 +148,3 @@ if(hamster->isConnected()) {
 }
 
 }
-
-
-

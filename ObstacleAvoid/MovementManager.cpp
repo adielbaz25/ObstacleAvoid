@@ -19,7 +19,7 @@ MovementManager::MovementManager(Robot * robot, MapDrawer* mapDrawer)
 void MovementManager::NavigateToWaypoint(Node* waypoint)
 {
 	this->waypoint = waypoint;
-	robot->realLocation = robot->prevBeliefedLocation = robot->currBeliefedLocation = robot->GetRealHamsterLocation();
+	robot->realLocation = robot->GetRealHamsterLocation();
 
 	recalculateDistanceFromWaypoint();
 
@@ -46,7 +46,6 @@ void MovementManager::NavigateToWaypoint(Node* waypoint)
 		}
 
 		recalculateDistanceFromWaypoint();
-		//mapDrawer->DrawRobot(robot->GetRealHamsterLocation());
 		mapDrawer->Show(robot->GetRealHamsterLocation());
 		sleep(1.5);
 	}

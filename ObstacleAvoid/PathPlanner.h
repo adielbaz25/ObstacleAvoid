@@ -25,11 +25,11 @@ public:
 	void handleNeighbors(MapMatrix* map, Node* currNode, Node* goalNode,
 			set<Node*>* openList, set<Node*>* closedList);
 	void findShortestPath(MapMatrix* map, Node* startNode, Node* goalNode);
-	std::list<Node* > markWaypoints(Node * start, Node * currNode);
+	std::list<Node* > markWaypoints(Node * start, Node * DestNode);
 
 private:
 	Node* getMinimalFNode(set<Node*>* openList);
-	double getShipua(Node* a, Node* b);
+	double getIncline(Node* a, Node* b);
 };
 
 #endif  PATHPLANNER_H_

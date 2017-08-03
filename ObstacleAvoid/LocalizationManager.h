@@ -31,7 +31,6 @@ private:
 	vector<LocalizationParticle *> particles;
 	double mapResolution;
 
-
 	//return back the particales which out of the free cells range to free cells range
 	bool tryReturnBackOutOfRangeParticle(LocalizationParticle *particle);
 

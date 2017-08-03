@@ -32,7 +32,6 @@ public:
 	void DrawMap(OccupancyGrid* occupancyGridMap, double rotationAngle);
 	void DrawMapMatrix(MapMatrix* MapMatrix);
 	void DrawPath(Node* goal);
-	void DrawRobot(positionState pos, cv::Mat * map);
 	void Show(positionState robotPos);
 	double DrawPatricles(std::vector<LocalizationParticle *>* particles);
 	cv::Mat* getMap();
