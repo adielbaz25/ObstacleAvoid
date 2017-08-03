@@ -1,10 +1,3 @@
-/*
- * PathPlanner.cpp
- *
- * Author: Adi Elbaz 206257313
- *         Yuval Ron 313584187
- */
-
 #include "PathPlanner.h"
 
 void PathPlanner::findShortestPath(MapMatrix* map, Node* startNode, Node* goalNode)
@@ -13,29 +6,22 @@ void PathPlanner::findShortestPath(MapMatrix* map, Node* startNode, Node* goalNo
 	set<Node*> closedList;
 	Node* currNode;
 
-	// Initalize the h* value of the nodes
 	initializeHuristicValues(map, goalNode);
-
-	// Calculate the f, g, h of the first node neighbors
-	handleNeighbors(map, startNode, goalNode, &openList, &closedList);
-
-	// Insert the source node to the closeList
 	closedList.insert(startNode);
 	startNode->setIsInClosedList(true);
+	handleNeighbors(map, startNode, goalNode, &openList, &closedList);
 
 	while(!openList.empty())
 	{
-		// Calculate the next node with the minimum F*
 		currNode = getMinimalFNode(&openList);
 
-		// Delete the node from the open list and add it to the close list
 		openList.erase(currNode);
 		currNode->setIsInOpenList(false);
 		closedList.insert(currNode);
 		currNode->setIsInClosedList(true);
 
-		// Calculate the f, g, h of the current node neighbors
 		handleNeighbors(map, currNode, goalNode, &openList, &closedList);
+
 	}
 }
 
@@ -67,27 +53,27 @@ void PathPlanner::handleNeighbors(MapMatrix* map, Node* currNode, Node* goalNode
 	{
 		for (int colIndex = currNode->getX() - 1; colIndex <= currNode->getX() + 1; colIndex++)
 		{
+			//cout << "X: " << colIndex << " Y: " << rowIndex << endl;
+
 			// Checks if we're out of bounds and if the current neighbor is not an obstacle
 			if (colIndex >= 0 && rowIndex >= 0 &&
 				colIndex < map->getWidth() && rowIndex < map->getHeight() &&
 				!map->getNodeAtIndex(colIndex, rowIndex)->getIsObstacle())
 			{
-				// Makes sure the current Node is not scanned
+				// Makes sure the current node is not scanned
 				if (colIndex != currNode->getX() || rowIndex != currNode->getY())
 				{
+					// Checks if the current neighbor is in the closed list
+
 					Node* currNeighbor = map->getNodeAtIndex(colIndex, rowIndex);
 
-					// Checks if the current neighbor is not in the closed list
 					if (!currNeighbor->getIsInClosedList())
 					{
-						// Calculate the current node distance to its neighbor
-						double tempGCost =
-								calculateDistance(currNode, currNeighbor) + currNode->getG();
+						double tempGCost = calculateDistance(currNode, currNeighbor) + currNode->getG();
 
-						// Checks if the current neighbor is not in the open list
+						// Checks if the current neighbor is already in the open list
 						if (!currNeighbor->getIsInOpenList())
 						{
-							// Initialize the values of the node for the first time
 							currNeighbor->setG(tempGCost);
 							currNeighbor->setF(currNeighbor->getH() + tempGCost);
 							currNeighbor->setParent(currNode);
@@ -99,12 +85,11 @@ void PathPlanner::handleNeighbors(MapMatrix* map, Node* currNode, Node* goalNode
 								return;
 							}
 
-							// Adding the Node to the open list for the first time
+							// Adding the node to the open list for the first time
 							openList->insert(currNeighbor);
 							currNeighbor->setIsInOpenList(true);
 						}
-
-						// The Node was already in the open list, check if we found a shorter path
+						// The node was already in the open list, check if we found a shorter path
 						else
 						{
 							if (tempGCost < currNeighbor->getG())
@@ -139,35 +124,31 @@ Node* PathPlanner::getMinimalFNode(set<Node*>* openList)
 	return minNode;
 }
 
-std::list<Node* > PathPlanner::markWaypoints(Node * start, Node * DestNode)
+std::list<Node* > PathPlanner::markWaypoints(Node * start, Node * currNode)
 {
 	std::list<Node* > waypoints;
 	Node* firstNode, *secondNode, *thirdNode;
-	firstNode = DestNode;
-	secondNode = DestNode->getParent();
+	firstNode = currNode;
+	secondNode = currNode->getParent();
 	int skipCounter = 0;
 
-	// Check if the destination node is not the start node
 	if(secondNode == NULL)
 	{
 		return waypoints;
 	}
 
-	// Loop on all the nodes in the path, from the destination to the first node
 	while (firstNode->getX() != start->getX() || firstNode->getY() != start->getY())
 	{
-		// Initialize the parent node of the current parent
+
 		thirdNode = secondNode->getParent();
 
-		// Check if we reached to the destination node
 		if(thirdNode == NULL)
 		{
 			waypoints.push_back(secondNode);
 			return waypoints;
 		}
 
-		// Check if there is an angle between the points or if its between the size to add waypoint
-		if((getIncline(firstNode,secondNode) != getIncline(secondNode,thirdNode)) ||
+		if((getShipua(firstNode,secondNode) != getShipua(secondNode,thirdNode)) ||
 				skipCounter >= WAYPOINT_TOLERENCE)
 		{
 			secondNode->setIsWaypoint(true);
@@ -179,6 +160,7 @@ std::list<Node* > PathPlanner::markWaypoints(Node * start, Node * DestNode)
 			skipCounter++;
 		}
 
+
 		firstNode = secondNode;
 		secondNode = thirdNode;
 	}
@@ -186,10 +168,12 @@ std::list<Node* > PathPlanner::markWaypoints(Node * start, Node * DestNode)
 	return waypoints;
 }
 
-double PathPlanner::getIncline(Node *a, Node * b)
+double PathPlanner::getShipua(Node *a, Node * b)
 {
 	if (b->getX() - a->getX() == 0)
 		return 0;
 
 	return (b->getY() - a->getY()) / (b->getX() - a->getX());
 }
+
+

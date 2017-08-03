@@ -1,10 +1,3 @@
-/*
- * Struct.h
- *
- * Author: Adi Elbaz 206257313
- *         Yuval Ron 313584187
- */
-
 #ifndef STRUCTS_H_
 #define STRUCTS_H_
 
@@ -44,5 +37,4 @@ struct parameters
 	double gridResolutionCM;
 };
 
-#endif  STRUCTS_H_
-
+#endif // STRUCTS_H_

@@ -1,10 +1,3 @@
-/*
- * Robot.h
- *
- * Author: Adi Elbaz 206257313
- *         Yuval Ron 313584187
- */
-
 #ifndef ROBOT_H_
 #define ROBOT_H_
 
@@ -17,26 +10,33 @@
 #include "MapDrawer.h"
 #include "Constants.h"
 #include "AngleUtils.h"
-#include "LocalizationManager.h"
+
+class LocalizationManager;
 
 using namespace HamsterAPI;
 using namespace std;
 
 class Robot {
-private:
+public:
 	Hamster * hamster;
 	double hamsterStartX, hamsterStartY;
 	LocalizationManager * localizationManager;
-	double resolution;
+	double prevX, prevY, prevYaw, currX, currY, currYaw, resolution;
+	int inflationRadius;
 	double mapHeight, mapWidth;
 
 public:
-	positionState prevBeliefedLocation, currBeliefedLocation, realLocation;
-
-	Robot(Hamster * hamster, LocalizationManager * localizationManager, double mapHeight, double mapWidth, double resolution);
-	positionState GetRealHamsterLocation();
-	void updateHamsterRealLocation();
-	void setHamsterSpeed(double speed, double wheelsAngle);
+	Robot(Hamster * hamster, LocalizationManager * localizationManager, int inflationRadius , double resolution);
+	void Initialize(positionState startLocation);
+	double GetDeltaX() const;
+	double GetDeltaY() const;
+	double GetDeltaYaw() const;
+	positionState GetCurrHamsterLocation();
+	void UpdateLocation();
+	Hamster* getHamster()
+	{
+		return hamster;
+	}
 	virtual ~Robot();
 };
 

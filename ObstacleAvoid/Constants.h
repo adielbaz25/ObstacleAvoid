@@ -1,41 +1,36 @@
-/*
- * Constants.h
- *
- * Author: Adi Elbaz 206257313
- *         Yuval Ron 313584187
- */
-
 #ifndef CONSTANTS_H_
 #define CONSTANTS_H_
 
-// Map
+// General
+//#define SERVER_HOST (char*)"10.10.245.63"
+#define SERVER_HOST (char*)"localhost"
+#define SERVER_PORT 6665
 #define BLOW_ROBOT_FACTOR 2.5
 #define MAP_ROTATION -30
-#define ROBOT_SIZE 20
-#define RESOLUTION_SIZE 5
-
-// Waypoints
-#define WAYPOINT_TOLERENCE 15
-#define WAYPOINT_RANGE 2
 
 // Robot
+#define WAYPOINTS_SKIP_NUM 3
+#define WAYPOINT_RANGE 2
+#define MIN_ANGLE_TO_REQUIRE_ROTATION 2
+#define ROTATION_SPEED 0.5
+#define DRIVE_SPEED 0.5
+#define ROBOT_SIZE 20
+#define RESOLUTION_SIZE 5
+#define WAYPOINT_TOLERENCE 15
 #define ROBOT_START_X 470
 #define ROBOT_START_Y 470
 #define GOAL_X 370
 #define GOAL_Y 540
-#define DELTA_ANGLE_TOL 20
-#define MAX_MOVE_SPEED 0.4
-#define MAX_TURN_SPEED 0.2
-#define MIN_TURN_SPEED 0.1
-#define YAW_TOLERANCE 1.05
-#define MAX_WHEELS_ANGLE 45
-#define MIN_WHEELS_ANGLE 2
-#define FORWARD_SPEED_FACTOR 50
+#define LIDAR_SCOPE 240
+#define LIDAR_COUNT 666
 
-#define MIN_DISTANCE_FOR_FULL_SPEED 25
+// Laser
+//#define LASER_SAMPLES_NUM 666
+//#define LASER_FOV 240
+//#define MIDDLE_SAMPLE_INDEX LASER_SAMPLES_NUM / 2
+//#define LASER_MAXIMUM_RANGE 2
 
 // Particle
-#define TARGET_START_BELIEF 0.8f
 #define STARTING_PARTICLES 99
 #define BELIEF_NORMALIZATION 1.5
 #define DISTANCE_THRESHOLD 1
@@ -50,5 +45,23 @@
 #define PARTICLE_YAW_BREED_SPREAD 10
 #define NEAR_OBSTACLE_RADIUS 2
 
-#endif  CONSTANTS_H_
+// Debug
+#define DEBUG_BLOWN_MAP true
+#define DEBUG_ASTAR_MAP false
+#define DEBUG_WAYPOINTS_MAP false
+#define DEBUG_RESIZED_PATH_MAP true
+#define DEBUG_OBSTACLES_MAP false
+#define DEBUG_PARTICLE_MAP false
+#define DEBUG_RUN_MAP true
 
+#define BLOWN_IMAGE_DEBUG_MAP "blownDebugMap.png"
+#define ASTAR_DEBUG_IMAGE_NAME "aStarDebugMap.png"
+#define WAYPOINTS_DEBUG_IMAGE_NAME "wayPointsDebugMap.png"
+#define RESIZED_PATH_DEBUG_IMAGE_NAME "resizedPathDebugMap.png"
+#define PARTICLES_OBSTACLES_DEBUG_IMAGE_NAME "particlesObstaclesDebugMap.png"
+#define PARTICLES_DEBUG_IMAGE_NAME "particlesDebugMap.png"
+#define RUN_DEBUG_MAP "runDebugMap.png"
+
+#define RUN_DEBUG_INTERVAL 50
+
+#endif // CONSTANTS_H_

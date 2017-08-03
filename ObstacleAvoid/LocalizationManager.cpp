@@ -1,360 +1,217 @@
-/*
- * LOcalizationManger.cpp
- *
- * Author: Adi Elbaz 206257313
- *         Yuval Ron 313584187
- */
-
 #include "LocalizationManager.h"
 #include <iostream>
 #include <algorithm>
+#include "Constants.h"
 
 using namespace std;
 
-LocalizationManager::LocalizationManager(cv::Mat* map, Hamster *hamster, double mapResolution)
+
+void LocalizationManager::Update(float deltaX, float deltaY, float deltaYaw, LidarScan* lidarHandler, MapMatrix* map)
 {
-	this->hamster = hamster;
-	this->map = map;
-	this->mapResolution = mapResolution;
-}
+	vector<LocalizationParticle*> childsToAdd;
+	vector<int> childsToRemove;
+	int particlesSize = particles.size();
 
-void LocalizationManager::createRandomParticle(LocalizationParticle *par)
-{
-	//Randomizing an angle
-	par->yaw = rand() % 360;
-	cv::Vec3b coloredPoint;
-
-	//set random column and row while the random cell chosen isn't free
-	do {
-		par->col = rand() % map->cols;
-		par->row = rand() % map->rows;
-		coloredPoint = map->at<cv::Vec3b>(par->row, par->col);
-
-
-	// While the particle isnt cell free
-	} while (!(coloredPoint[0] == 255 && coloredPoint[1] == 255 && coloredPoint[2] == 255));
-
-	//Conversion
-	par->x = (par->col - ROBOT_START_X) * mapResolution;
-	par->y = (ROBOT_START_Y - par->row ) * mapResolution;
-
-
-}
-double LocalizationManager:: randNumberFactor(int level)
-{
-	if(level == 3)
-		return 0.4 -0.8*(double)rand()/(double)RAND_MAX;
-	else if(level == 2)
-		return 0.2-0.4*(double)rand()/(double)RAND_MAX;
-	else
-		return 0.1-0.2*(double)rand()/(double)RAND_MAX;
-}
-
-double LocalizationManager:: randNumberFactorYaw(int level)
-{
-	if(level == 5)
-		return 180 - rand() % 360;
-	else if(level == 4)
-		return 90 - rand() % 180;
-	else if(level == 3)
-		return 30 - rand() % 60;
-	else if(level == 2)
-		return 10 - rand() % 20;
-	else
-		return 5 - rand() % 10;
-
-}
-
-void LocalizationManager::createNeighborParticales(LocalizationParticle *badParticale,  LocalizationParticle *goodParticale)//previous particle , new particle
-{
-	cv::Vec3b coloredPoint;
-
-
-	do {
-		if (goodParticale->belief < 0.3)
-		{
-			badParticale->x = goodParticale->x+ randNumberFactor(3);
-			badParticale->y = goodParticale->y + randNumberFactor(3);
-		}
-		else if (goodParticale->belief < 0.6)
-		{
-			badParticale->x = goodParticale->x+ randNumberFactor(2);
-			badParticale->y = goodParticale->y+ randNumberFactor(2);
-		}
-		else
-		{
-			badParticale->x = goodParticale->x+ randNumberFactor(1);
-			badParticale->y = goodParticale->y+ randNumberFactor(1);
-		}
-
-		badParticale->row = (double) ROBOT_START_Y - badParticale->y / mapResolution;
-		badParticale->col = badParticale->x / mapResolution+ ROBOT_START_X;
-
-		coloredPoint = map->at<cv::Vec3b>(badParticale->row, badParticale->col);
-
-	} while (!(coloredPoint[0] == 255 && coloredPoint[1] == 255 && coloredPoint[2] == 255));
-
-	if (goodParticale->belief < 0.2)
-		badParticale->yaw = (goodParticale->yaw + (randNumberFactorYaw(5)));
-	else if (goodParticale->belief < 0.4)
-		badParticale->yaw = (goodParticale->yaw + (randNumberFactorYaw(4)));
-	else if (goodParticale->belief < 0.6)
-		badParticale->yaw = (goodParticale->yaw + (randNumberFactorYaw(3)));
-	else if (goodParticale->belief < 0.8)
-		badParticale->yaw = (goodParticale->yaw + (randNumberFactorYaw(2)));
-	else
-		badParticale->yaw = (goodParticale->yaw + (randNumberFactorYaw(1)));
-
-	if(badParticale->yaw >= 360)
-		badParticale->yaw -= 360;
-	if(badParticale->yaw < 0)
-		badParticale->yaw += 360;
-
-
-}
-
-void LocalizationManager::InitParticalesOnMap(positionState * ps)
-{
-	// Set the number of particles
-	particles.resize(NUM_OF_PARTICALES);
-
-	cv::Vec3b coloredPoint;
-	initSourceParticle(ps);
-
-	for (size_t i = 0; i < particles.size() - 1 ; i++)
+	// Update all the particles
+	for (int i = 0; i < particlesSize; i++)
 	{
-		particles[i] = new LocalizationParticle();
+		LocalizationParticle* particle = particles[i];
 
-		//Randomizing an angle
-		double degYaw = ps->yaw*180/M_PI + 180;
-		if(degYaw >= 360)
-			degYaw -= 360;
-		if(degYaw < 0)
-			degYaw += 360;
+		particle->Update(deltaX, deltaY, deltaYaw, map, lidarHandler, robot);
 
-		particles[i]->yaw = rand() % 360;
+		float belif = particle->belief;
 
-		//set random column and row while the random cell chosen isn't free
-		do {
-			particles[i]->col = ps->pos.x + rand() % 5 ;
-			particles[i]->row = ps->pos.y + rand() % 5;
-
-			coloredPoint = map->at<cv::Vec3b>(particles[i]->row, particles[i]->col);
-
-		} while (!(coloredPoint[0] == 255 && coloredPoint[1] == 255 && coloredPoint[2] == 255));
-
-		//Conversion
-		particles[i]->x = (particles[i]->col - ROBOT_START_X) * mapResolution;
-		particles[i]->y = (ROBOT_START_Y - particles[i]->row ) * mapResolution;
-
-	}
-
-
-}
-
-void LocalizationManager::initSourceParticle(positionState * ps) {
-	particles[particles.size() - 1] = new LocalizationParticle();
-	particles[particles.size() - 1]->col = ps->pos.x;
-	particles[particles.size() - 1]->row = ps->pos.y;
-	particles[particles.size() - 1]->yaw = ps->yaw;
-	particles[particles.size() - 1]->belief = 1;
-}
-
-double LocalizationManager::updateBelief(LocalizationParticle *p)
-{
-	cv::Vec3b coloredPoint;
-	LidarScan scan = hamster->getLidarScan();
-
-	int hits = 0;
-	int misses = 0;
-
-	for (unsigned int i = 0; i < scan.getScanSize(); i++)
-	{
-		double angle = scan.getScanAngleIncrement() * i * DEG2RAD;
-
-		if (scan.getDistance(i) < scan.getMaxRange() - 0.001)
+		// If belief is too low - remove the particle
+		if (belif <= LOW_BELIEF_MIN)
 		{
-
-			double wallX = p->x + scan.getDistance(i)* cos(angle + p->yaw * DEG2RAD- 180 * DEG2RAD);
-
-
-			double wallY = p->y+ scan.getDistance(i)* sin(angle + p->yaw * DEG2RAD- 180 * DEG2RAD);
-
-
-			int i = (double) ROBOT_START_Y - wallY / mapResolution;
-
-
-			int j = wallX / mapResolution + ROBOT_START_X;
-
-
-			coloredPoint = map->at<cv::Vec3b>(i, j);
-
-			// Maybe change to cell occupied
-			if (!(coloredPoint[0] == 255 && coloredPoint[1] == 255 && coloredPoint[2] == 255))
-			{
-				hits++;
-			}
-			else
-			{
-				misses++;
-			}
+			childsToRemove.push_back(i);
+		}
+		// If belief is high - high breed
+		else if (belif >= HIGH_BELIEF_MIN &&
+				 ((particlesSize + HIGH_BREED + childsToAdd.size()) < MAX_PARTICLES_COUNT))
+		{
+			DuplicateParticle(particle, HIGH_BREED, childsToAdd);
+		}
+		// If belief is normal - normal breed
+		else if ((particlesSize + NORMAL_BREED + childsToAdd.size()) < MAX_PARTICLES_COUNT)
+		{
+			DuplicateParticle(particle, NORMAL_BREED, childsToAdd);
 		}
 	}
 
+	// Removing the useless particles.
+	if (childsToRemove.size() > 0)
+	{
+		for(int i = childsToRemove.size() - 1; i >=0 ; i--)
+		{
+			int indexToRemove = childsToRemove[i];
+			particles.erase(particles.begin() + indexToRemove);
+		}
+	}
 
-
-
-	return (double) hits / (hits + misses);
+	// Adding the new particles.
+	if (childsToAdd.size() > 0)
+	{
+		ChildsToParticles(childsToAdd);
+	}
 }
 
-bool compareParticals(LocalizationParticle* x, LocalizationParticle* y)
+
+LocalizationParticle* LocalizationManager::BestParticle(LidarScan* lidar, float x, float y)
 {
-	if(x->belief < y->belief)
+	float X = x;
+	float Y = y;
+	float Yaw = 0;
+
+	// If there are no particles - we need to generate new ones
+		// (occures in case we just started the robot)
+	particles.clear();
+	if (particles.empty())
+	{
+		// Create a lot of particals around the robot location
+		CreateParticle(X, Y, Yaw, 1, INITIAL_EXPANSION_RADIUS, INITIAL_YAW_RANGE,  PARTICLE_INITIAL_BREED);
+
+		LocalizationParticle* randomParticle = particles[rand() % particles.size()];
+
+		X = randomParticle->x;
+		Y = randomParticle->y;
+		Yaw = randomParticle->yaw;
+
+		// Calculate the particles belief only by observation model
+		for (int i = 1; i < particles.size(); i++)
+		{
+			particles[i]->belief = particles[i]->ProbabilityByLidarScan(*map, *robot) * BELIEF_NORMALIZATION_VALUE;
+		}
+
+	}
+
+	LocalizationParticle* bestParticle = particles[0];
+
+	cout << "** Choosing best particle **" << endl;
+
+	// Search for the best particale by it;s belief.
+	for (int i = 1; i < particles.size(); i++)
+	{
+
+		if (particles[i]->belief > bestParticle->belief)
+		{
+			bestParticle = particles[i];
+		}
+	}
+
+	X = bestParticle->x;
+	Y = bestParticle->y;
+	Yaw = bestParticle->yaw;
+
+	return bestParticle;
+}
+
+bool LocalizationManager::CreateParticle(float xDelta, float yDelta, float yawDelta, float belief)
+{
+	return CreateParticle(xDelta, yDelta, yawDelta, belief, EXPANSION_RADIUS, YAW_RANGE, HIGH_BREED);
+}
+
+bool LocalizationManager::CreateParticle(float xDelta, float yDelta, float yawDelta, float belief, float expansionRadius, float yawRange, int childsCount)
+{
+	if (particles.size() + childsCount < MAX_PARTICLES_COUNT)
+	{
+		LocalizationParticle* particle = new LocalizationParticle();
+		particle->hamster = this->hamster;
+		particle->manager = this;
+		particle->x = xDelta;
+		particle->y = yDelta;
+		particle->yaw = yawDelta;
+		particle->belief = belief;
+
+		particles.push_back(particle);
+		vector<LocalizationParticle*> childs;
+		DuplicateParticle(particle, childsCount, expansionRadius, yawRange, childs);
+		ChildsToParticles(childs);
+
 		return true;
+	}
+
 	return false;
 }
 
-bool LocalizationManager::tryReturnBackOutOfRangeParticle(LocalizationParticle *p)
-{
-	cv::Vec3b coloredPoint;
-	LocalizationParticle * copyPar = new LocalizationParticle(*p);
-	int distant;
-	int count = 0;
-	do {
-		//+-7 for distant
-		distant = 14 - rand() % 28;
-		p->col = copyPar->col + distant;
-		distant = 14 - rand() % 28;
-		p->row = copyPar->row + distant;
-		count++;
-		coloredPoint = map->at<cv::Vec3b>(copyPar->row, copyPar->col);
+// Create new children-particles, by using the best particles.
+void LocalizationManager::DuplicateParticle(LocalizationParticle* particle, int childCount, vector<LocalizationParticle*>& childs) {
 
-	} while (!(coloredPoint[0] == 255 && coloredPoint[1] == 255 && coloredPoint[2] == 255)
-			&& count < TRY_TO_BACK);
-
-	//Conversion
-	p->x = (p->col - ROBOT_START_X) * mapResolution;
-	p->y = (ROBOT_START_Y - p->row ) * mapResolution;
-
-
-	delete copyPar;
-
-	return count < TRY_TO_BACK;
-}
-
-void LocalizationManager::calculateYaw(LocalizationParticle* p, double deltaYaw) {
-	p->yaw += deltaYaw;
-	if (p->yaw >= 360) {
-		p->yaw -= 360;
-	}
-	if (p->yaw < 0) {
-		p->yaw += 360;
-	}
-}
-
-void LocalizationManager::calculateRealPos(LocalizationParticle* p,
-										   double deltaX,
-										   double deltaY,
-										   double deltaYaw) {
-	double distance = sqrt(deltaX * deltaX + deltaY * deltaY);
-	p->x += distance * cos(p->yaw * DEG2RAD);
-	p->y += distance * sin(p->yaw * DEG2RAD);
-
-	calculateYaw(p, deltaYaw);
-}
-
-void LocalizationManager::calculatePositionOnMap(LocalizationParticle* p) {
-	p->row = (double) ROBOT_START_Y - p->y / mapResolution;
-	p->col = p->x / mapResolution + ROBOT_START_X;
-
-
-}
-
-void LocalizationManager::replaceBadOutOfRangeParticle(LocalizationParticle* p, int size) {
-	int indexFromTop = size - rand() % TOP_PARTICALES - 1;
-
-	if (particles[indexFromTop]->belief > 0.4)
+	// In case we havn't reached the maximum particles allowed number, create a new particle.
+	if (particles.size() + childCount < MAX_PARTICLES_COUNT)
 	{
-		createNeighborParticales(p, particles[indexFromTop]);
-	}
-	else
-	{
-		createRandomParticle(p);
-	}
-}
-
-void LocalizationManager:: moveParticales(double deltaX, double deltaY, double deltaYaw)
-{
-	cv::Vec3b coloredPoint;
-	int size = particles.size();
-	for (size_t i = 0; i < particles.size(); i++)
-	{
-		LocalizationParticle *p = particles[i];
-
-		calculateRealPos(p, deltaX, deltaY, deltaYaw);
-		calculatePositionOnMap(p);
-
-		coloredPoint = map->at<cv::Vec3b>(p->row, p->col);
-
-
-		if (!(coloredPoint[0] == 255 && coloredPoint[1] == 255 && coloredPoint[2] == 255) &&
-			(p->belief <= MIN_BELIEF || tryReturnBackOutOfRangeParticle(p)))
+		// Create new child-particles, and push them into the vector.
+		for (int i = 0; i < childCount; i++)
 		{
-			replaceBadOutOfRangeParticle(p, size);
-		}
-
-		p->belief = updateBelief(p);
-	}
-
-	std::sort(particles.begin(), particles.end(), compareParticals);
-
-	for (int i = 1; i <= BAD_PARTICALES; i++)
-	{
-		if (particles[size - i]->belief > MIN_BELIEF)
-		{
-			createNeighborParticales(particles[i - 1], particles[size - i]);
-			updateBelief(particles[i - 1]);
-		}
-		else
-		{
-			createRandomParticle(particles[i - 1]);
-			updateBelief(particles[i - 1]);
+			LocalizationParticle* child = particle->CreateChild();
+			childs.push_back(child);
 		}
 	}
-
 }
 
-void LocalizationManager::printParticles()
+// Create new children-particles, by using the best particles.
+void LocalizationManager::DuplicateParticle(LocalizationParticle* particle, int childCount, float expansionRadius, float yawRange, vector<LocalizationParticle*>& childs)
 {
-	for (unsigned int i = 0; i < particles.size(); i++)
+	// In case we havn't reached the maximum particles allowed number, create a new particle.
+	if (particles.size() + childCount < MAX_PARTICLES_COUNT)
 	{
-
-		cout << "Particle's Number " << i <<": " << endl;
-		cout<< "x : "<<particles[i]->x <<endl;
-		cout<< "y : "<< particles[i]->y<<endl;
-		cout<< "heading angle : " << particles[i]->yaw <<endl;
-		cout<<"belief : "<< particles[i]->belief << endl<<endl<<endl;
+		// Create new child-particles, and push them into the vector.
+		for (int i = 0; i < childCount; i++)
+		{
+			LocalizationParticle* child = particle->CreateChild(expansionRadius, yawRange);
+			childs.push_back(child);
+		}
 	}
 }
 
-vector<LocalizationParticle *>* LocalizationManager::getParticles()
+void LocalizationManager::ChildsToParticles(vector<LocalizationParticle*> childs)
 {
-	return &particles;
+	for (size_t i = 0; i < childs.size(); i++)
+	{
+		particles.push_back(childs[i]);
+	}
 }
 
-positionState LocalizationManager::getPosition() {
-	LocalizationParticle* localizationParticle = particles[particles.size() -1];
-
-	positionState positionState;
-	positionState.pos.x = localizationParticle->col;
-	positionState.pos.y = localizationParticle->row;
-	positionState.yaw = localizationParticle->yaw;
-
-	return positionState;
+LocalizationManager::LocalizationManager(OccupancyGrid *ogrid, Hamster *hamster, Robot* amnon, MapMatrix* map)
+{
+	this->robot = amnon;
+	this->hamster = hamster;
+	this->ogrid = ogrid;
+	this->map = map;
 }
 
-double LocalizationManager::getBestBelief() {
-	return particles[particles.size() -1]->belief;
+double LocalizationManager::computeBelief(LocalizationParticle *particle, LidarScan& scan)
+{
+	int hitsCount = 0;
+	int faultCount = 0;
+	int counter = 0;
+
+	// Running over all the scans
+	while(counter < scan.getScanSize())
+	{
+		// Getting the current angle by multiplying the der2rad and counter
+		double CurrAngle = scan.getScanAngleIncrement() * counter * DEG2RAD;
+
+		// Comparing the distance by the scanner
+		if (scan.getDistance(counter) < scan.getMaxRange() - 0.001)
+		{
+			double obsX = particle->x + scan.getDistance(counter) * sin(CurrAngle + particle->yaw * DEG2RAD - 180 * DEG2RAD);
+			double obsY = particle->y + scan.getDistance(counter) * cos(CurrAngle + particle->yaw * DEG2RAD - 180 * DEG2RAD);
+
+			int pixelsi = ((double) ogrid->getWidth() / 2) + (obsX);
+			int pixelsj = ((double) ogrid->getHeight() / 2) - (obsY);
+
+			// Checking where the thraw was corrent according to the grid
+			if (ogrid->getCell(pixelsi, pixelsj) == CELL_OCCUPIED) {
+				hitsCount++;
+			} else {
+				faultCount++;
+			}
+		}
+
+		counter++;
+	}
+	return (float) hitsCount / (hitsCount + faultCount);
 }
 
 LocalizationManager::~LocalizationManager()

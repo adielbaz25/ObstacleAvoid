@@ -1,8 +1,8 @@
 /*
  * MovementManager.h
  *
- * Author: Adi Elbaz 206257313
- *         Yuval Ron 313584187
+ *  Created on: Jul 2, 2017
+ *      Author: user
  */
 
 #ifndef MOVEMENTMANAGER_H_
@@ -13,7 +13,7 @@
 #include "AngleUtils.h"
 #include <vector>
 #include <math.h>
-#include "Constants.h"
+#include "LocalizationManager.h"
 using namespace std;
 using namespace HamsterAPI;
 
@@ -21,31 +21,46 @@ using namespace HamsterAPI;
 
 class MovementManager
 {
+public:
+    MovementManager(HamsterAPI::Hamster * hamster, Robot * robot, MapDrawer* mapDrawer, LocalizationManager* localizationManager);
+    void NavigateToWaypoint(Node * waypoint, LidarScan& scan);
+    void StopMoving() ;
+    virtual ~MovementManager();
+
 private:
+	HamsterAPI::Hamster * hamster;
 	Robot * robot;
 	MapDrawer* mapDrawer;
+	positionState currLocation;
+	positionState prevLocation;
 	Node * waypoint;
-	double distanceFromWaypoint;
-	double targetYaw, deltaYaw;
+	double distanceFromWaypoint, prevDistanceFromWaypoint;
+	double currYaw, destYaw, currDeltaYaw;
+	double turnSpeed, moveSpeed;
+	string chosenDirectionName;
+	clock_t navigationStartTime;
+	float wheelsAngle;
+	bool locationChanged;
+	LocalizationManager* localizationManager;
 
-	void turnToWaypoint();
-	void moveToWaypoint();
+	void TurnToWaypoint();
+	void MoveToWaypoint();
+
 	double GetAdjustedYaw(double yawToAdjust) const;
-	double calculateTurningDirection();
-	void recalculateDistanceFromWaypoint();
-	double calculateTurnSpeed();
-	double calculateForwardSpeed();
+	void RecalculateTurningDirection();
+	void RecalculateDistanceFromWaypoint();
+	void CalculateTurnSpeedByDeltaYaw();
+	void CalculateMoveSpeedByDistanceFromWaypoint();
+	void MoveBackwards();
+	void PrintBeforeTurning();
+	void PrintAfterTurning();
+	void PrintAfterMoving();
+	void PrintAfterWaypointIsReached();
 	bool isRequiredAngleAdjustment();
+	clock_t isRobotStuck();
 	bool isDeltaAngleOnEndOfCiricle();
 	float calculateWheelsAngle();
-	void calculateTargetYaw(Node* waypoint);
-	void stopMoving();
-	void recalculateDeltaYaw();
-
-public:
-	MovementManager(Robot * robot, MapDrawer* mapDrawer);
-	void NavigateToWaypoint(Node * waypoint);
-	virtual ~MovementManager();
+	void calculateDestYaw(Node* waypoint);
 };
 
 #endif /* MOVEMENTMANAGER_H_ */

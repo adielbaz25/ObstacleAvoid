@@ -1,10 +1,3 @@
-/*
- * MapMatrix.cpp
- *
- * Author: Adi Elbaz 206257313
- *         Yuval Ron 313584187
- */
-
 #include "MapMatrix.h"
 
 MapMatrix::MapMatrix()
@@ -33,25 +26,27 @@ Node* MapMatrix::getNodeAtIndex(int x, int y) const
 
 void MapMatrix::loadMap(cv::Mat* map)
 {
-	unsigned mapWidth = map->cols;
-	unsigned mapHeight = map->rows;
+	size_t mapWidth = map->cols;
+	size_t mapHeight = map->rows;
 
 	vector<vector<Node*> > matrix(mapWidth, vector<Node*>(mapHeight));
 
-	for (unsigned y = 0; y < mapHeight; y++)
+	for (size_t y = 0; y < mapHeight; y++)
 	{
-		for (unsigned x = 0; x < mapWidth; x++) {
+		for (size_t x = 0; x < mapWidth; x++)
+		{
 			matrix[y][x] = new Node(x, y);
 
 			cv::Vec3b coloredPoint = map->at<cv::Vec3b>(y, x);
 			matrix[y][x]->setIsObstacle(coloredPoint[0] == 0 && coloredPoint[1] == 0 && coloredPoint[2] == 0);
 		}
 	}
+
 	_matrix = matrix;
 
 }
 
-// Blown up the obstacles in the map
+// Creates a new image from the source file where every obstacle is blown up
 void MapMatrix::loadBlowMap(cv::Mat* map)
 {
 	loadMap(map);
@@ -66,21 +61,21 @@ void MapMatrix::loadBlowMap(cv::Mat* map)
 
 	std::list<Node*> obstacles;
 
-	// Expand size is half of the robot size
+	// We only want half of the actual robot size
 	robotSizeCm /= 2;
 
 	// Blow the map
 	robotSizeCm *= BLOW_ROBOT_FACTOR;
 
-	// Calculates the expand range
-	int blowRange = ceil(robotSizeCm / resolutionCm);
+	// Calculates the blow range
+	unsigned blowRange = MapMatrix::calculateBlowRange(robotSizeCm, resolutionCm);
 
 	// Looping to scan the original map
 	for (unsigned y = 0; y < mapHeight; y++)
 	{
 		for (unsigned x = 0; x < mapWidth; x++)
 		{
-			// Checks if the original Node is obstacle
+			// Checks if the original node is obstacle
 			if (_matrix[y][x]->getIsObstacle())
 			{
 				obstacles.push_front(_matrix[y][x]);
@@ -89,23 +84,24 @@ void MapMatrix::loadBlowMap(cv::Mat* map)
 	}
 
 	std::list<Node*>::const_iterator iterator;
-	for (iterator = obstacles.begin(); iterator != obstacles.end(); ++iterator) {
-		// Calculates a range to set as obstacle around the current Node
-		currRec = MapMatrix::getObstacleNeighbors (blowRange, (*iterator)->getX(), (*iterator)->getY(),
-				mapWidth, mapHeight);
+	for (iterator = obstacles.begin(); iterator != obstacles.end(); ++iterator)
+	{
+        // Calculates a rectangle to set as obstacles around the current node
+        currRec = getCurrentRectangle(blowRange, (*iterator)->getX(), (*iterator)->getY(), mapWidth, mapHeight);
 
-		// Loops to set the neighbors in the blow range as obstacles
-		for (unsigned neighborY = currRec.startingY; neighborY < currRec.endingY; neighborY++)
-		{
-			for (unsigned neighborX = currRec.startingX; neighborX < currRec.endingX; neighborX++)
-			{
-				// Sets the current neighbor Node as obstacle obstacle
-				_matrix[neighborY][neighborX]->setIsObstacle(true);
-			}
-		}
+        // Loops to set the neighbors in the blow range as obstacles
+        for (unsigned neighborY = currRec.startingY; neighborY < currRec.endingY; neighborY++)
+        {
+            for (unsigned neighborX = currRec.startingX; neighborX < currRec.endingX; neighborX++)
+            {
+                // Sets the current neighbor node as obstacle obstacle
+                _matrix[neighborY][neighborX]->setIsObstacle(true);
+            }
+        }
 	}
 
 }
+
 
 bool MapMatrix::isAreaAnObstacle(int colIndex, int rowIndex, int resolution) const
 {
@@ -123,41 +119,63 @@ bool MapMatrix::isAreaAnObstacle(int colIndex, int rowIndex, int resolution) con
 	return false;
 }
 
-// Return struct of the neighbors nodes of an obstacle
-rectangle MapMatrix::getObstacleNeighbors(int blowRange, unsigned currX, unsigned currY, unsigned width, unsigned height)
+// Calculates the blow range from the robot size and resolution
+int MapMatrix::calculateBlowRange(double robotSizeCm, double resolutionCm)
+{
+	int blowRange = ceil(robotSizeCm / resolutionCm);
+
+	return blowRange;
+}
+
+// Calculates a rectangle that wraps the current index
+rectangle MapMatrix::getCurrentRectangle(int blowRange, unsigned currX, unsigned currY, unsigned width, unsigned height)
 {
 	struct rectangle result;
 
-	// Gets the left top point
-	result.startingY = currY - blowRange;
-	result.startingX = currX - blowRange;
+	// Gets the leftmost upmost index
+	int startingY = currY - blowRange;
 
-	// Checks if the point is out of bounds
-	if (result.startingY < 0)
+	// Checks if out of bounds
+	if (startingY < 0)
 	{
-		result.startingY = 0;
+		startingY = 0;
 	}
 
-	if (result.startingX < 0)
+	int startingX = currX - blowRange;
+
+	// Checks if out of bounds
+	if (startingX < 0)
 	{
-		result.startingX = 0;
+		startingX = 0;
 	}
 
-	// Gets the right bottom point
-	result.endingY = currY + blowRange;
-	result.endingX = currX + blowRange;
+	// Gets the rightmost downmost index
+	unsigned endingY = currY + blowRange;
 
-	// Checks if the point is out of bounds
-	if (result.endingY > height)
+	// Checks if out of bounds
+	if (endingY > height)
 	{
-		result.endingY = height;
+		endingY = height;
 	}
 
-	if (result.endingX > width)
+	unsigned endingX = currX + blowRange;
+
+	// Checks if out of bounds
+	if (endingX > width)
 	{
-		result.endingX = width;
+		endingX = width;
 	}
+
+	// Setting the result
+	result.startingX = startingX;
+	result.startingY = startingY;
+	result.endingX = endingX;
+	result.endingY = endingY;
 
 	return result;
 }
 
+bool MapMatrix::IsCellObstacle(float x, float y) const
+{
+	return (getNodeAtIndex(x, y)->getIsObstacle());
+}

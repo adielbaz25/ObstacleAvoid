@@ -1,41 +1,40 @@
-/*
- * MapDrawer.h
- *
- * Author: Adi Elbaz 206257313
- *         Yuval Ron 313584187
- */
-
-#ifndef GUI_MAPDRAWER_H_
-#define GUI_MAPDRAWER_H_
+#ifndef MAPDRAWER_H_
+#define MAPDRAWER_H_
 
 #include <HamsterAPIClientCPP/Hamster.h>
-#include "MapPointType.cpp"
+#include "MapPointType.h"
 #include "Node.h"
 #include "MapMatrix.h"
-#include "LocalizationParticle.h"
 #include "PositionUtils.h"
 #include "AngleUtils.h"
-#include "Robot.h"
 #include "opencv2/imgproc.hpp"
 using namespace HamsterAPI;
 using namespace std;
 
-class MapDrawer {
-private:
-	const string WINDOW_TITLE;
-	cv::Mat* _map;
-	void SetPointColor(int x, int y, int red, int green, int blue);
+class LocalizationParticle;
+
+class MapDrawer
+{
 public:
 	MapDrawer(int width, int height);
 
-	void SetPointType(int x, int y, MapPointType mapPointType);
-	void DrawMap(OccupancyGrid* occupancyGridMap, double rotationAngle);
+	void SetPointType(size_t x, size_t y, MapPointType mapPointType);
+	void DrawMap(const OccupancyGrid* occupancyGridMap, double rotationAngle);
 	void DrawMapMatrix(MapMatrix* MapMatrix);
 	void DrawPath(Node* goal);
-	void Show(positionState robotPos);
-	double DrawPatricles(std::vector<LocalizationParticle *>* particles);
+	void Show();
+	void SaveCurrentMap();
+	void RevertToSavedMap();
+	void DrawPatricles(std::vector<LocalizationParticle *>* particles);
 	cv::Mat* getMap();
-	//void DrawLidarScan(std::vector<positionState> obstacles);
+
+private:
+    const string WINDOW_TITLE;
+    cv::Mat* _map;
+    cv::Mat _savedMapState;
+    const size_t _goodParticlesToDraw;
+    size_t _goodParticlesDrawn;
+    void SetPointColor(size_t x, size_t y, int red, int green, int blue);
 };
 
-#endif /* GUI_MAPDRAWER_H_ */
+#endif

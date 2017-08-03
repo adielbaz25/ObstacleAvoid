@@ -1,10 +1,3 @@
-/*
- * AngleUtils.h
- *
- * Author: Adi Elbaz 206257313
- *         Yuval Ron 313584187
- */
-
 #ifndef ANGLEUTILS_H_
 #define ANGLEUTILS_H_
 
@@ -12,9 +5,11 @@
 #include <HamsterAPIClientCPP/Hamster.h>
 using namespace HamsterAPI;
 
-double convertDegreesToRadians(double angleDegrees);
-double convertRadiansToDegrees(double angleRadians);
-void rotateMapOnOrigin(cv::Mat* source, cv::Mat* dest, double rotationAngle);
-double getYawInOneCiricle(double yaw);
+namespace AngleUtils
+{
+    double convertDegreesToRadians(double angleDegrees);
+    double convertRadiansToDegrees(double angleRadians);
+    void rotateMapOnOrigin(cv::Mat* map, double rotationAngle);
+}
 
-#endif  ANGLEUTILS_H_
+#endif  // ANGLEUTILS_H_

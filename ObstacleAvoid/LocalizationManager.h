@@ -1,10 +1,3 @@
-/*
- * LocalizationManager.h
- *
- * Author: Adi Elbaz 206257313
- *         Yuval Ron 313584187
- */
-
 #ifndef LOCALIZATIONMANAGER_H_
 #define LOCALIZATIONMANAGER_H_
 
@@ -13,6 +6,7 @@
 #include <HamsterAPIClientCPP/Hamster.h>
 #include "Constants.h"
 #include "Structs.h"
+#include "MapMatrix.h"
 #define NUM_OF_PARTICALES 350
 #define TRY_TO_BACK 20
 #define TOP_PARTICALES 80
@@ -23,13 +17,23 @@ using namespace std;
 using namespace HamsterAPI;
 
 //this class manage all the particals in the map
-class LocalizationManager {
+class LocalizationManager
+{
+public:
+	void Update(float deltaX, float deltaY, float deltaYaw, LidarScan* lidarHandler, MapMatrix* map);
+	LocalizationParticle* BestParticle(LidarScan* lidar, float x, float y);
+	bool CreateParticle(float xDelta, float yDelta, float yawDelta, float belief);
+	bool CreateParticle(float xDelta, float yDelta, float yawDelta, float belief, float expansionRadius, float yawRange, int childsCount);
+	void DuplicateParticle(LocalizationParticle* particle, int childCount, vector<LocalizationParticle*>& childs);
+	void DuplicateParticle(LocalizationParticle* particle, int childCount, float expansionRadius, float yawRange, vector<LocalizationParticle*>& childs);
+	void ChildsToParticles(vector<LocalizationParticle*> childs);
 
-private:
-
-	Hamster *hamster;
 	vector<LocalizationParticle *> particles;
-	double mapResolution;
+
+public:
+	MapMatrix* map;
+	Robot* robot;
+	Hamster *hamster;
 
 	//return back the particales which out of the free cells range to free cells range
 	bool tryReturnBackOutOfRangeParticle(LocalizationParticle *particle);
@@ -54,13 +58,14 @@ private:
 	void calculateYaw(LocalizationParticle* p, double deltaYaw);
 	void calculatePositionOnMap(LocalizationParticle* p);
 	void replaceBadOutOfRangeParticle(LocalizationParticle* p, int size);
+	double computeBelief(LocalizationParticle *particle, LidarScan& scan);
 
 public:
 
-	cv::Mat* map;
+	OccupancyGrid *ogrid;
 
 	//constructor
-	LocalizationManager( cv::Mat* map, Hamster *hamster, double mapResolution);
+	LocalizationManager( OccupancyGrid *ogrid, Hamster *hamster, Robot* amnon, MapMatrix* map);
 
 	//getter
 	vector<LocalizationParticle *>* getParticles();

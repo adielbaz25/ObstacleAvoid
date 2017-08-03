@@ -1,10 +1,3 @@
-/*
- * Node.cpp
- *
- * Author: Adi Elbaz 206257313
- *         Yuval Ron 313584187
- */
-
 #include "Node.h"
 #include "stdlib.h"
 
@@ -127,5 +120,3 @@ void Node::setParent(Node* parent)
 {
 	_parent = parent;
 }
-
-
